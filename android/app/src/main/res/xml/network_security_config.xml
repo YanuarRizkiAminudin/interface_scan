@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    InterfaceScan network security config.
+    Only HTTPS traffic is permitted; no cleartext.
+    The Gemini API (generativelanguage.googleapis.com) uses HTTPS, so no
+    exceptions are needed.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <!-- Trust the standard CA bundle -->
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>
