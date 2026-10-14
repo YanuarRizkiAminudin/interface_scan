@@ -227,6 +227,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     try {
       final allMetrics = <VisualMetrics>[];
       final allOcr = <OcrResult>[];
+      final allFindings = <Finding>[];
 
       for (var i = 0; i < _session.screenshots.length; i++) {
         if (!mounted) return;
@@ -236,11 +237,26 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         });
 
         final path = _session.screenshots[i].imagePath;
-        final metrics = await _imageService.analyze(path);
+
+        // Analyse — skip this screenshot if decode fails (bad/corrupt file)
+        VisualMetrics metrics;
+        try {
+          metrics = await _imageService.analyze(path);
+        } catch (e) {
+          // Log a warning and continue with remaining screenshots
+          setState(() => _errorMessage =
+              'Screen ${i + 1}: could not analyse image. Skipping. ($e)');
+          continue;
+        }
         allMetrics.add(metrics);
 
         setState(() => _step = _PipelineStep.ocr);
-        final ocr = await _ocrService.recognize(path);
+        OcrResult ocr;
+        try {
+          ocr = await _ocrService.recognize(path);
+        } catch (_) {
+          ocr = OcrResult(fullText: '', blocks: [], blockCount: 0);
+        }
         allOcr.add(ocr);
 
         setState(() {
@@ -252,6 +268,27 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             ocrResult: ocr,
           );
         });
+
+        // Run AI per-screenshot so screenshotIndex is set correctly
+        if (widget.apiKey.isNotEmpty) {
+          try {
+            final aiService = AiService(apiKey: widget.apiKey);
+            final perScreenFindings = await aiService.getSuggestions(
+              metrics: metrics,
+              ocrResult: ocr,
+              screenshotIndex: _session.screenshots[i].index,
+            );
+            allFindings.addAll(perScreenFindings);
+          } on AiException catch (e) {
+            setState(() => _errorMessage =
+                'AI (screen ${i + 1}): ${e.userMessage}');
+          }
+        }
+      }
+
+      if (allMetrics.isEmpty) {
+        throw Exception(
+            'All screenshots failed to analyse. Check the image files.');
       }
 
       final aggMetrics = _aggregateMetrics(allMetrics);
@@ -259,22 +296,9 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       setState(() {
         _session.visualMetrics = aggMetrics;
         _session.ocrResult = aggOcr;
-        _step = _PipelineStep.ai;
+        _session.findings = allFindings;
+        _step = _PipelineStep.done;
       });
-
-      if (widget.apiKey.isNotEmpty) {
-        try {
-          final aiService = AiService(apiKey: widget.apiKey);
-          final findings = await aiService.getSuggestions(
-              metrics: aggMetrics, ocrResult: aggOcr);
-          setState(() => _session.findings = findings);
-        } on AiException catch (e) {
-          // AI suggestions are optional — show a warning but don't abort.
-          setState(() => _errorMessage = 'AI suggestions: ${e.userMessage}');
-        }
-      }
-
-      setState(() => _step = _PipelineStep.done);
       await _storage.saveSession(_session);
     } on AiException catch (e) {
       setState(() {
@@ -1052,7 +1076,7 @@ class _VisualMetricsPanel extends StatelessWidget {
       child: Column(
         children: [
           MetricCard(
-            label: 'Edge Density',
+            label: AppStrings.metricEdgeDensity,
             value: metrics.edgeDensity.toStringAsFixed(4),
             barValue: (metrics.edgeDensity / 0.25).clamp(0.0, 1.0),
             barColor: _edgeColor(metrics.edgeDensity),
@@ -1060,7 +1084,7 @@ class _VisualMetricsPanel extends StatelessWidget {
             icon: Icons.grain,
           ),
           MetricCard(
-            label: 'Contrast Score',
+            label: AppStrings.metricContrastScore,
             value: metrics.contrastScore.toStringAsFixed(4),
             barValue: metrics.contrastScore,
             barColor: _contrastColor(metrics.contrastScore),
@@ -1068,7 +1092,7 @@ class _VisualMetricsPanel extends StatelessWidget {
             icon: Icons.contrast,
           ),
           MetricCard(
-            label: 'Low-Detail Area',
+            label: AppStrings.metricLowDetailArea,
             value:
                 '${(metrics.lowDetailAreaRatio * 100).toStringAsFixed(1)}%',
             barValue: metrics.lowDetailAreaRatio,
@@ -1077,15 +1101,15 @@ class _VisualMetricsPanel extends StatelessWidget {
             icon: Icons.crop_free,
           ),
           MetricCard(
-            label: 'Contour Density',
+            label: AppStrings.metricContourDensity,
             value: metrics.contourDensity.toStringAsFixed(2),
             barValue: (metrics.contourDensity / 20).clamp(0.0, 1.0),
             barColor: AppTheme.primary,
-            interpretation: 'Regions per 10,000 px',
+            interpretation: AppStrings.metricRegionsPer10k,
             icon: Icons.account_tree_outlined,
           ),
           MetricCard(
-            label: 'Mean Luminance',
+            label: AppStrings.metricMeanLuminance,
             value: metrics.meanLuminance.toStringAsFixed(1),
             barValue: metrics.meanLuminance / 255,
             barColor: AppTheme.textSecondary,
@@ -1175,14 +1199,12 @@ class _ScreenshotDetailTileState extends State<_ScreenshotDetailTile> {
                     horizontal: 12, vertical: 4),
                 child: Column(
                   children: [
-                    _Row('Edge Density', m.edgeDensity.toStringAsFixed(4)),
-                    _Row('Contrast Score',
-                        m.contrastScore.toStringAsFixed(4)),
-                    _Row('Low-Detail',
+                    _Row(AppStrings.metricEdgeDensity, m.edgeDensity.toStringAsFixed(4)),
+                    _Row(AppStrings.metricContrastScore, m.contrastScore.toStringAsFixed(4)),
+                    _Row(AppStrings.metricLowDetailArea,
                         '${(m.lowDetailAreaRatio * 100).toStringAsFixed(1)}%'),
-                    _Row('Contour Density',
-                        m.contourDensity.toStringAsFixed(2)),
-                    _Row('Luminance', m.meanLuminance.toStringAsFixed(1)),
+                    _Row(AppStrings.metricContourDensity, m.contourDensity.toStringAsFixed(2)),
+                    _Row(AppStrings.metricMeanLuminance, m.meanLuminance.toStringAsFixed(1)),
                   ],
                 ),
               ),
@@ -1192,7 +1214,7 @@ class _ScreenshotDetailTileState extends State<_ScreenshotDetailTile> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('OCR',
+                    const Text(AppStrings.ocrSectionLabel,
                         style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,

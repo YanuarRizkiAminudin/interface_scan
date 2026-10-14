@@ -386,7 +386,7 @@ class _ComparisonSummaryStrip extends StatelessWidget {
           ),
           const SizedBox(width: 20),
           _StripStat(
-            label: 'Rejected',
+            label: AppStrings.rejected,
             value: session.rejectedCount.toString(),
             color: AppTheme.textSecondary,
           ),
@@ -430,32 +430,46 @@ class _FindingsSummaryTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accepted = session.acceptedFindings; // sorted by severity desc
-    final rejected =
-        session.findings.where((f) => f.status == FindingStatus.rejected).toList();
-
     if (session.findings.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
-          'No findings recorded.',
-          style: TextStyle(color: AppTheme.textSecondary),
+          AppStrings.noFindingsRecorded,
+          style: const TextStyle(color: AppTheme.textSecondary),
         ),
       );
     }
+
+    final accepted = session.acceptedFindings;
+    final pending = session.findings
+        .where((f) => f.status == FindingStatus.pending)
+        .toList();
+    final rejected = session.findings
+        .where((f) => f.status == FindingStatus.rejected)
+        .toList();
 
     return ListView(
       padding: const EdgeInsets.only(bottom: 40),
       children: [
         if (accepted.isNotEmpty) ...[
           _GroupHeader(
-            label: '${AppStrings.acceptedFindingsGroup} (${accepted.length})',
+            label:
+                '${AppStrings.acceptedFindingsGroup} (${accepted.length})',
             color: AppTheme.secondary,
           ),
           ...accepted.map((f) => _FindingSummaryTile(finding: f)),
         ],
+        if (pending.isNotEmpty) ...[
+          _GroupHeader(
+            label:
+                '${AppStrings.pendingFindingsHeader} (${pending.length})',
+            color: AppTheme.warning,
+          ),
+          ...pending.map((f) => _FindingSummaryTile(finding: f)),
+        ],
         if (rejected.isNotEmpty) ...[
           _GroupHeader(
-            label: '${AppStrings.rejectedFindingsGroup} (${rejected.length})',
+            label:
+                '${AppStrings.rejectedFindingsGroup} (${rejected.length})',
             color: AppTheme.error,
           ),
           ...rejected.map((f) => _FindingSummaryTile(finding: f)),
@@ -556,30 +570,32 @@ class _FindingSummaryTile extends StatelessWidget {
                   fontSize: 13, color: AppTheme.textSecondary),
             ),
 
-            const SizedBox(height: 6),
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: AppTheme.secondary.withValues(alpha: 0.06),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(Icons.lightbulb_outline,
-                      size: 14, color: AppTheme.secondary),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      finding.recommendation,
-                      style: const TextStyle(
-                          fontSize: 13, color: AppTheme.textPrimary),
+            if (finding.recommendation.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppTheme.secondary.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.lightbulb_outline,
+                        size: 14, color: AppTheme.secondary),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        finding.recommendation,
+                        style: const TextStyle(
+                            fontSize: 13, color: AppTheme.textPrimary),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
+            ],
 
             if (finding.evaluatorNote != null &&
                 finding.evaluatorNote!.isNotEmpty) ...[

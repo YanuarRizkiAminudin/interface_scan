@@ -98,10 +98,14 @@ class AiService {
 
   /// Returns heuristic [Finding] suggestions for the given screenshot data.
   ///
+  /// [screenshotIndex] — 1-based index of the screenshot being analysed.
+  /// Pass null when calling with aggregated multi-screenshot data.
+  ///
   /// Throws [AiException] on any failure (key, network, model, parse).
   Future<List<Finding>> getSuggestions({
     required VisualMetrics metrics,
     required OcrResult ocrResult,
+    int? screenshotIndex,
   }) async {
     if (!isConfigured) {
       throw const AiException(
@@ -118,7 +122,7 @@ class AiService {
       'contents': [
         {
           'parts': [
-            {'text': _buildPrompt(metrics: metrics, ocrResult: ocrResult)},
+            {'text': _buildPrompt(metrics: metrics, ocrResult: ocrResult, screenshotIndex: screenshotIndex)},
           ],
         },
       ],
@@ -145,7 +149,7 @@ class AiService {
     }
 
     _checkStatus(response);
-    return _parseResponse(response.body);
+    return _parseResponse(response.body, screenshotIndex: screenshotIndex);
   }
 
   // ── HTTP status → AiException ──────────────────────────────────────────────
@@ -209,9 +213,13 @@ class AiService {
   String _buildPrompt({
     required VisualMetrics metrics,
     required OcrResult ocrResult,
-  }) =>
-      '''
-You are a UI/UX usability expert evaluating a screenshot using Nielsen's 10 Usability Heuristics.
+    int? screenshotIndex,
+  }) {
+    final screenContext = screenshotIndex != null
+        ? '\n### Screenshot\nThis analysis covers screenshot #$screenshotIndex.'
+        : '';
+    return '''
+You are a UI/UX usability expert evaluating a screenshot using Nielsen's 10 Usability Heuristics.$screenContext
 
 ### Image Metrics (automated analysis)
 - Image size: ${metrics.imageWidth} × ${metrics.imageHeight} px
@@ -232,10 +240,11 @@ For each issue provide: heuristicId (1–10), title, reason, recommendation, con
 Return ONLY a valid JSON array:
 [{"heuristicId":<int>,"title":"<str>","reason":"<str>","recommendation":"<str>","confidence":<float>}]
 ''';
+  }
 
   // ── Response parser ────────────────────────────────────────────────────────
 
-  List<Finding> _parseResponse(String body) {
+  List<Finding> _parseResponse(String body, {int? screenshotIndex}) {
     Map<String, dynamic> decoded;
     try {
       decoded = jsonDecode(body) as Map<String, dynamic>;
@@ -280,6 +289,7 @@ Return ONLY a valid JSON array:
           recommendation: map['recommendation'] as String? ?? '',
           confidence:
               ((map['confidence'] as num?)?.toDouble() ?? 0.5).clamp(0.0, 1.0),
+          screenshotIndex: screenshotIndex,
           severity: 2,
           status: FindingStatus.pending,
         ));
