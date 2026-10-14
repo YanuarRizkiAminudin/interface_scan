@@ -128,7 +128,7 @@ class _AddFindingScreenState extends State<AddFindingScreen> {
                 SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'This finding is added manually by you and is automatically accepted.',
+                    AppStrings.manualFindingInfo,
                     style: TextStyle(
                         fontSize: 12, color: AppTheme.textSecondary),
                   ),
@@ -140,7 +140,7 @@ class _AddFindingScreenState extends State<AddFindingScreen> {
           const SizedBox(height: 20),
 
           // ── Heuristic picker ─────────────────────────────────────────
-          const _FieldLabel(label: 'Heuristic Violated'),
+          const _FieldLabel(label: AppStrings.heuristicViolated),
           const SizedBox(height: 8),
           DropdownButtonFormField<int>(
             initialValue: _heuristicId,
@@ -242,7 +242,7 @@ class _AddFindingScreenState extends State<AddFindingScreen> {
           // ── Severity ──────────────────────────────────────────────────
           Row(
             children: [
-              const _FieldLabel(label: 'Severity'),
+              const _FieldLabel(label: AppStrings.severity),
               const SizedBox(width: 12),
               SeverityBadge(severity: _severity),
             ],

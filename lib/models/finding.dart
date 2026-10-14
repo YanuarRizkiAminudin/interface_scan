@@ -16,7 +16,7 @@ extension FindingStatusX on FindingStatus {
   }
 }
 
-/// One heuristic finding, as suggested by AI and reviewed by the evaluator.
+/// One heuristic finding — from AI suggestion or manually added.
 class Finding {
   final String id;
 
@@ -26,14 +26,19 @@ class Finding {
   /// Short title of the issue.
   final String title;
 
-  /// AI-generated explanation of the issue.
+  /// Explanation of the issue (AI-generated or manually written).
   final String reason;
 
-  /// AI-generated recommendation / suggestion.
+  /// Actionable recommendation for fixing the issue.
   final String recommendation;
 
-  /// AI confidence score (0.0 – 1.0).
+  /// Confidence score (0.0–1.0). AI findings use AI's confidence;
+  /// manually-added findings use 1.0.
   final double confidence;
+
+  /// 1-based index of the screenshot this finding relates to.
+  /// null means it applies to the whole session (e.g. from aggregate analysis).
+  final int? screenshotIndex;
 
   /// Human-assigned severity (0 = cosmetic … 4 = catastrophic).
   int severity;
@@ -51,6 +56,7 @@ class Finding {
     required this.reason,
     required this.recommendation,
     required this.confidence,
+    this.screenshotIndex,
     this.severity = 2,
     this.status = FindingStatus.pending,
     this.evaluatorNote,
@@ -63,6 +69,7 @@ class Finding {
     String? reason,
     String? recommendation,
     double? confidence,
+    int? screenshotIndex,
     int? severity,
     FindingStatus? status,
     String? evaluatorNote,
@@ -74,6 +81,7 @@ class Finding {
         reason: reason ?? this.reason,
         recommendation: recommendation ?? this.recommendation,
         confidence: confidence ?? this.confidence,
+        screenshotIndex: screenshotIndex ?? this.screenshotIndex,
         severity: severity ?? this.severity,
         status: status ?? this.status,
         evaluatorNote: evaluatorNote ?? this.evaluatorNote,
@@ -86,6 +94,7 @@ class Finding {
         'reason': reason,
         'recommendation': recommendation,
         'confidence': confidence,
+        if (screenshotIndex != null) 'screenshotIndex': screenshotIndex,
         'severity': severity,
         'status': status.name,
         if (evaluatorNote != null) 'evaluatorNote': evaluatorNote,
@@ -98,6 +107,7 @@ class Finding {
         reason: json['reason'] as String,
         recommendation: json['recommendation'] as String,
         confidence: (json['confidence'] as num).toDouble(),
+        screenshotIndex: json['screenshotIndex'] as int?,
         severity: json['severity'] as int,
         status: FindingStatus.values.byName(json['status'] as String),
         evaluatorNote: json['evaluatorNote'] as String?,

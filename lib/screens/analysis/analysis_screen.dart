@@ -158,6 +158,49 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     });
   }
 
+  Future<void> _renameScreenshot(int index) async {
+    final s = _session.screenshots[index];
+    final ctrl = TextEditingController(text: s.label);
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text(AppStrings.renameScreenshot),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: AppStrings.screenshotLabel,
+            hintText: AppStrings.screenshotLabelHint,
+          ),
+          textCapitalization: TextCapitalization.words,
+          onSubmitted: (v) => Navigator.pop(ctx, v.trim()),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text(AppStrings.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
+            child: const Text(AppStrings.save),
+          ),
+        ],
+      ),
+    );
+    ctrl.dispose();
+    if (result != null && result.isNotEmpty) {
+      setState(() {
+        _session.screenshots[index] = ScreenshotAnalysis(
+          imagePath: s.imagePath,
+          index: s.index,
+          label: result,
+          visualMetrics: s.visualMetrics,
+          ocrResult: s.ocrResult,
+        );
+      });
+    }
+  }
+
   /// Clears analysis results when screenshots change.
   void _resetAnalysisState() {
     _step = _PipelineStep.idle;
@@ -288,8 +331,9 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       cs += m.contrastScore;
       cd += m.contourDensity;
       lum += m.meanLuminance;
-      w = m.imageWidth;
-      h = m.imageHeight;
+      // Keep the largest dimensions as representative size.
+      if (m.imageWidth > w) w = m.imageWidth;
+      if (m.imageHeight > h) h = m.imageHeight;
     }
     final n = list.length;
     return VisualMetrics(
@@ -327,7 +371,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       child: Scaffold(
         // Let the scaffold shift up when the keyboard opens.
         resizeToAvoidBottomInset: true,
-        appBar: AppBar(title: const Text('Analyze Screenshots')),
+        appBar: AppBar(title: const Text(AppStrings.analyzeScreenshots)),
         body: ListView(
           // Dismiss keyboard on scroll so the user can see thumbnails.
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -353,13 +397,14 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
               canAdd: _canAddMore,
               onAdd: _addScreenshots,
               onRemove: _removeScreenshot,
+              onRename: _renameScreenshot,
             ),
 
             // Single, compact flow tip — no duplicate hint banners.
             const Padding(
               padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
               child: Text(
-                'Use screenshots from the same user flow.',
+                AppStrings.screenshotCountHint,
                 style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
               ),
             ),
@@ -631,12 +676,14 @@ class _ScreenshotGrid extends StatelessWidget {
   final bool canAdd;
   final VoidCallback onAdd;
   final void Function(int) onRemove;
+  final void Function(int) onRename;
 
   const _ScreenshotGrid({
     required this.screenshots,
     required this.canAdd,
     required this.onAdd,
     required this.onRemove,
+    required this.onRename,
   });
 
   @override
@@ -662,6 +709,7 @@ class _ScreenshotGrid extends StatelessWidget {
                   return _ScreenshotThumbnail(
                     screenshot: screenshots[i],
                     onRemove: () => onRemove(i),
+                    onRename: () => onRename(i),
                   );
                 }
                 return _AddTile(onTap: onAdd);
@@ -705,15 +753,19 @@ class _EmptyGrid extends StatelessWidget {
 class _ScreenshotThumbnail extends StatelessWidget {
   final ScreenshotAnalysis screenshot;
   final VoidCallback onRemove;
+  final VoidCallback onRename;
 
   const _ScreenshotThumbnail({
     required this.screenshot,
     required this.onRemove,
+    required this.onRename,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
+    return GestureDetector(
+      onLongPress: onRename, // long-press to rename
+      child: Stack(
       fit: StackFit.expand,
       children: [
         // Thumbnail image
@@ -793,7 +845,8 @@ class _ScreenshotThumbnail extends StatelessWidget {
           ),
         ),
       ],
-    );
+    ),   // Stack
+    );   // GestureDetector
   }
 }
 
@@ -961,7 +1014,7 @@ class _ProgressPanel extends StatelessWidget {
             const SizedBox(height: 10),
             Row(
               children: [
-                Text('Screen $current of $total',
+                Text('${AppStrings.screenOf} $current ${AppStrings.of} $total',
                     style: const TextStyle(
                         fontSize: 12, color: AppTheme.textSecondary)),
                 const SizedBox(width: 10),

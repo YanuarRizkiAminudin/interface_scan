@@ -72,7 +72,7 @@ class _FindingsReviewScreenState extends State<FindingsReviewScreen> {
     await _storage.saveSession(widget.session);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Evaluation saved.')),
+      const SnackBar(content: Text(AppStrings.evaluationSaved)),
     );
   }
 
@@ -147,7 +147,7 @@ class _FindingsReviewScreenState extends State<FindingsReviewScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.save_outlined),
-            tooltip: 'Save',
+            tooltip: AppStrings.save,
             onPressed: _saveAndFinish,
           ),
         ],
@@ -195,6 +195,14 @@ class _FindingsReviewScreenState extends State<FindingsReviewScreen> {
                         onAccept: () => _accept(item.originalIndex),
                         onEdit: () => _edit(item.originalIndex),
                         onReject: () => _reject(item.originalIndex),
+                        onHeuristicTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => HeuristicsScreen(
+                              highlightId: item.finding.heuristicId,
+                            ),
+                          ),
+                        ),
                       );
                     },
                   ),
@@ -221,7 +229,7 @@ class _FindingsReviewScreenState extends State<FindingsReviewScreen> {
             heroTag: 'compare_fab',
             onPressed: _goToComparison,
             icon: const Icon(Icons.compare_arrows_outlined),
-            label: const Text('Before vs After'),
+            label: const Text(AppStrings.comparison),
             backgroundColor: AppTheme.secondary,
             foregroundColor: Colors.white,
           ),
@@ -262,13 +270,13 @@ class _SummaryBar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         children: [
-          _Stat(label: 'Total', value: total, color: AppTheme.primary),
+          _Stat(label: AppStrings.total, value: total, color: AppTheme.primary),
           const SizedBox(width: 16),
-          _Stat(label: 'Accepted', value: accepted, color: AppTheme.secondary),
+          _Stat(label: AppStrings.accepted, value: accepted, color: AppTheme.secondary),
           const SizedBox(width: 16),
-          _Stat(label: 'Pending', value: pending, color: AppTheme.warning),
+          _Stat(label: AppStrings.pending, value: pending, color: AppTheme.warning),
           const SizedBox(width: 16),
-          _Stat(label: 'Rejected', value: rejected, color: AppTheme.error),
+          _Stat(label: AppStrings.rejected, value: rejected, color: AppTheme.error),
         ],
       ),
     );
@@ -396,7 +404,13 @@ class _EditFindingDialogState extends State<_EditFindingDialog> {
         reason: _reasonCtrl.text.trim(),
         recommendation: _recCtrl.text.trim(),
         severity: _severity,
-        status: FindingStatus.accepted,
+        // Preserve existing status — do not force-accept on edit.
+        // If finding was pending, editing keeps it pending.
+        // If it was rejected and user edits via "Revise", keep rejected
+        // unless the caller explicitly changes status.
+        status: widget.finding.status == FindingStatus.pending
+            ? FindingStatus.pending
+            : widget.finding.status,
         evaluatorNote:
             _noteCtrl.text.trim().isEmpty ? null : _noteCtrl.text.trim(),
       );
@@ -412,13 +426,13 @@ class _EditFindingDialogState extends State<_EditFindingDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text(
-              'Edit Finding',
+              AppStrings.editFinding,
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 16),
 
             // Heuristic selector
-            const Text('Heuristic',
+            const Text(AppStrings.heuristicViolated,
                 style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -444,33 +458,24 @@ class _EditFindingDialogState extends State<_EditFindingDialog> {
 
             const SizedBox(height: 12),
 
-            _Field(label: 'Title', controller: _titleCtrl),
+            _Field(label: AppStrings.findingTitle, controller: _titleCtrl),
             const SizedBox(height: 12),
-            _Field(
-                label: 'Reason',
-                controller: _reasonCtrl,
-                maxLines: 3),
+            _Field(label: AppStrings.reason, controller: _reasonCtrl, maxLines: 3),
             const SizedBox(height: 12),
-            _Field(
-                label: 'Recommendation',
-                controller: _recCtrl,
-                maxLines: 3),
+            _Field(label: AppStrings.recommendation, controller: _recCtrl, maxLines: 3),
             const SizedBox(height: 12),
-            _Field(
-                label: 'Evaluator note (optional)',
-                controller: _noteCtrl,
-                maxLines: 2),
+            _Field(label: AppStrings.evaluatorNote, controller: _noteCtrl, maxLines: 2),
 
             const SizedBox(height: 16),
 
-            // Severity slider
             Row(
               children: [
-                const Text('Severity  ',
+                const Text(AppStrings.severity,
                     style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: AppTheme.textSecondary)),
+                const SizedBox(width: 8),
                 SeverityBadge(severity: _severity),
               ],
             ),
@@ -488,7 +493,7 @@ class _EditFindingDialogState extends State<_EditFindingDialog> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: const [
                 Text('0', style: TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
-                Text('Cosmetic → Catastrophic',
+                Text(AppStrings.cosmeticToCatastrophic,
                     style: TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
                 Text('4', style: TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
               ],
@@ -498,14 +503,14 @@ class _EditFindingDialogState extends State<_EditFindingDialog> {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                TextButton(
+                  TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel'),
+                  child: const Text(AppStrings.cancel),
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton(
                   onPressed: () => Navigator.pop(context, _build()),
-                  child: const Text('Accept & Save'),
+                  child: const Text(AppStrings.acceptAndSave),
                 ),
               ],
             ),

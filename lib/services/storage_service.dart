@@ -61,7 +61,9 @@ class StorageService {
   }
 
   /// Saves or overwrites a session on disk and updates the index.
+  /// The caller is responsible for setting [session.updatedAt] before calling.
   Future<void> saveSession(EvaluationSession session) async {
+    // Update timestamp here so it's always accurate at save time.
     session.updatedAt = DateTime.now();
     final file = await _sessionFile(session.id);
     await file.writeAsString(session.toJsonString(), flush: true);

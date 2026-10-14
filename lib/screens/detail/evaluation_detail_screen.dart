@@ -101,7 +101,8 @@ class _EvaluationDetailScreenState extends State<EvaluationDetailScreen> {
           // ── Quick action buttons ─────────────────────────────────────
           _ActionRow(
             hasFindings: _session.totalFindings > 0,
-            hasAnalysis: _session.allAnalyzed,
+            // Show Review/Compare if analysis done OR if there are any findings.
+            hasAnalysis: _session.allAnalyzed || _session.totalFindings > 0,
             onReview: () => _openReview(context),
             onCompare: () => _openComparison(context),
             onAnalyze: () => _openAnalysis(context),

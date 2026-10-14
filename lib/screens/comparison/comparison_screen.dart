@@ -7,6 +7,7 @@ import '../../core/constants/heuristics.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/evaluation_session.dart';
 import '../../models/finding.dart';
+import '../../models/screenshot_analysis.dart';
 import '../../services/storage_service.dart';
 import '../../widgets/safe_file_image.dart';
 import '../../widgets/severity_badge.dart';
@@ -94,6 +95,7 @@ class _SideBySideTabState extends State<_SideBySideTab> {
   final ScrollController _leftScroll = ScrollController();
   final ScrollController _rightScroll = ScrollController();
   bool _syncing = false;
+  int _selectedScreenIndex = 0; // which original screenshot to show
 
   @override
   void initState() {
@@ -128,11 +130,24 @@ class _SideBySideTabState extends State<_SideBySideTab> {
   @override
   Widget build(BuildContext context) {
     final session = widget.session;
+    final screenshots = session.screenshots;
+    final selectedPath = screenshots.isNotEmpty
+        ? screenshots[_selectedScreenIndex.clamp(0, screenshots.length - 1)]
+            .imagePath
+        : session.originalImagePath;
 
     return Column(
       children: [
         // ── Summary strip ──────────────────────────────────────────────────
         _ComparisonSummaryStrip(session: session),
+
+        // ── Screenshot selector (only when session has multiple) ───────────
+        if (screenshots.length > 1)
+          _ScreenshotSelector(
+            screenshots: screenshots,
+            selectedIndex: _selectedScreenIndex,
+            onSelect: (i) => setState(() => _selectedScreenIndex = i),
+          ),
 
         // ── Images ────────────────────────────────────────────────────────
         Expanded(
@@ -151,7 +166,7 @@ class _SideBySideTabState extends State<_SideBySideTab> {
                       child: SingleChildScrollView(
                         controller: _leftScroll,
                         child: SafeFileImage(
-                          path: session.originalImagePath,
+                          path: selectedPath,
                           fit: BoxFit.fitWidth,
                           fallback: const _BrokenImage(),
                         ),
@@ -191,6 +206,77 @@ class _SideBySideTabState extends State<_SideBySideTab> {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _ScreenshotSelector extends StatelessWidget {
+  final List<ScreenshotAnalysis> screenshots;
+  final int selectedIndex;
+  final ValueChanged<int> onSelect;
+
+  const _ScreenshotSelector({
+    required this.screenshots,
+    required this.selectedIndex,
+    required this.onSelect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: AppTheme.primary.withValues(alpha: 0.05),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      child: Row(
+        children: [
+          Text(
+            AppStrings.selectScreenToCompare,
+            style: const TextStyle(
+                fontSize: 12, color: AppTheme.textSecondary),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: List.generate(screenshots.length, (i) {
+                  final selected = i == selectedIndex;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: GestureDetector(
+                      onTap: () => onSelect(i),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: selected
+                              ? AppTheme.primary
+                              : AppTheme.surface,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: selected
+                                ? AppTheme.primary
+                                : AppTheme.divider,
+                          ),
+                        ),
+                        child: Text(
+                          screenshots[i].label,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: selected
+                                ? Colors.white
+                                : AppTheme.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -288,13 +374,13 @@ class _ComparisonSummaryStrip extends StatelessWidget {
       child: Row(
         children: [
           _StripStat(
-            label: 'Accepted issues',
+            label: AppStrings.acceptedIssues,
             value: session.acceptedCount.toString(),
             color: AppTheme.primary,
           ),
           const SizedBox(width: 20),
           _StripStat(
-            label: 'High/Catastrophic',
+            label: AppStrings.highCatastrophic,
             value: highSeverity.toString(),
             color: AppTheme.error,
           ),
@@ -362,14 +448,14 @@ class _FindingsSummaryTab extends StatelessWidget {
       children: [
         if (accepted.isNotEmpty) ...[
           _GroupHeader(
-            label: 'Accepted Findings (${accepted.length})',
+            label: '${AppStrings.acceptedFindingsGroup} (${accepted.length})',
             color: AppTheme.secondary,
           ),
           ...accepted.map((f) => _FindingSummaryTile(finding: f)),
         ],
         if (rejected.isNotEmpty) ...[
           _GroupHeader(
-            label: 'Rejected Findings (${rejected.length})',
+            label: '${AppStrings.rejectedFindingsGroup} (${rejected.length})',
             color: AppTheme.error,
           ),
           ...rejected.map((f) => _FindingSummaryTile(finding: f)),
