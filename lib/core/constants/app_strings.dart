@@ -102,4 +102,37 @@ class AppStrings {
   static const String finding = 'finding';
   static const String findings = 'findings';
   static const String redesignBadge = 'Redesign';
+
+  // Evaluation Detail
+  static const String evaluationDetail = 'Evaluation Detail';
+  static const String continueAnalysis = 'Continue Analysis';
+  static const String noScreenshotsRecorded = 'No screenshots recorded.';
+  static const String noFindingsRecorded = 'No findings recorded yet.';
+  static const String screenshotsLabel = 'Screenshots';
+  static const String findingsSummary = 'Findings Summary';
+  static const String metricsSummary = 'Visual Metrics Summary';
+  static const String notAnalyzedYet = 'Not analyzed yet.';
+
+  // Add Finding (manual)
+  static const String addFinding = 'Add Finding';
+  static const String addFindingManual = 'Add Manual Finding';
+  static const String findingTitle = 'Finding Title';
+  static const String findingTitleHint = 'e.g. No error feedback on login failure';
+  static const String findingReason = 'Reason / Observation';
+  static const String findingReasonHint =
+      'Describe what you observed and why it is a problem…';
+  static const String findingRecommendation = 'Recommendation';
+  static const String findingRecommendationHint =
+      'Suggest how to fix or improve this…';
+  static const String findingAdded = 'Finding added.';
+  static const String titleRequired = 'Title is required.';
+  static const String reasonRequired = 'Reason is required.';
+
+  // Heuristics Reference
+  static const String heuristicsReference = 'Heuristics Reference';
+  static const String heuristicsSubtitle =
+      "Nielsen's 10 Usability Heuristics";
+  static const String heuristicsIntro =
+      'These 10 general principles are used to evaluate user interface design. '
+      'Each finding in InterfaceScan is mapped to one of these heuristics.';
 }

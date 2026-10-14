@@ -4,6 +4,7 @@ import '../../config/ai_config.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/theme/app_theme.dart';
 import '../../services/storage_service.dart';
+import '../heuristics/heuristics_screen.dart';
 
 /// Full-page Settings screen.
 /// Accessible via the gear icon in the HomeScreen app bar.
@@ -166,6 +167,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           value: "Nielsen's 10 Usability Heuristics",
                         ),
                       ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                // ── Resources section ──────────────────────────────────
+                const _SectionLabel(label: 'Resources'),
+                const SizedBox(height: 8),
+                Card(
+                  margin: EdgeInsets.zero,
+                  child: ListTile(
+                    leading: const Icon(Icons.menu_book_outlined,
+                        color: AppTheme.primary),
+                    title: const Text(
+                      AppStrings.heuristicsReference,
+                      style: TextStyle(
+                          fontSize: 14, fontWeight: FontWeight.w500),
+                    ),
+                    subtitle: const Text(
+                      AppStrings.heuristicsSubtitle,
+                      style: TextStyle(fontSize: 12),
+                    ),
+                    trailing: const Icon(Icons.chevron_right,
+                        color: AppTheme.textSecondary),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const HeuristicsScreen()),
                     ),
                   ),
                 ),

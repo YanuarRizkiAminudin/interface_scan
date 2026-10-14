@@ -8,6 +8,7 @@ import '../../models/evaluation_session.dart';
 import '../../services/storage_service.dart';
 import '../../widgets/safe_file_image.dart';
 import '../analysis/analysis_screen.dart';
+import '../detail/evaluation_detail_screen.dart';
 import '../settings/settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -51,13 +52,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _openSession(EvaluationSession session) async {
-    final apiKey = await _storage.getApiKey();
-    if (!mounted) return;
     await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) =>
-            AnalysisScreen(apiKey: apiKey, existingSession: session),
+        builder: (_) => EvaluationDetailScreen(session: session),
       ),
     );
     _loadSessions();

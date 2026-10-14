@@ -9,6 +9,8 @@ import '../../services/storage_service.dart';
 import '../../widgets/finding_card.dart';
 import '../../widgets/severity_badge.dart';
 import '../comparison/comparison_screen.dart';
+import '../findings/add_finding_screen.dart';
+import '../heuristics/heuristics_screen.dart';
 
 /// Step 2: Human reviews each AI-suggested finding —
 /// Accept, Edit (with severity + note), or Reject.
@@ -84,6 +86,25 @@ class _FindingsReviewScreenState extends State<FindingsReviewScreen> {
     );
   }
 
+  Future<void> _openAddFinding() async {
+    final result = await Navigator.push<Finding>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AddFindingScreen(session: widget.session),
+      ),
+    );
+    if (result != null) {
+      setState(() => _findings.add(result));
+    }
+  }
+
+  void _openHeuristics() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const HeuristicsScreen()),
+    );
+  }
+
   // ── Filtering ─────────────────────────────────────────────────────────────
 
   List<({int originalIndex, Finding finding})> get _filteredFindings {
@@ -119,6 +140,11 @@ class _FindingsReviewScreenState extends State<FindingsReviewScreen> {
       appBar: AppBar(
         title: const Text(AppStrings.reviewFindings),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.menu_book_outlined),
+            tooltip: AppStrings.heuristicsReference,
+            onPressed: _openHeuristics,
+          ),
           IconButton(
             icon: const Icon(Icons.save_outlined),
             tooltip: 'Save',
@@ -181,6 +207,16 @@ class _FindingsReviewScreenState extends State<FindingsReviewScreen> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
+          // Add manual finding
+          FloatingActionButton(
+            heroTag: 'add_finding_fab',
+            onPressed: _openAddFinding,
+            backgroundColor: Colors.white,
+            foregroundColor: AppTheme.primary,
+            tooltip: AppStrings.addFindingManual,
+            child: const Icon(Icons.add),
+          ),
+          const SizedBox(height: 10),
           FloatingActionButton.extended(
             heroTag: 'compare_fab',
             onPressed: _goToComparison,
