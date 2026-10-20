@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../core/constants/app_strings.dart';
+import '../../core/constants/heuristics.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/evaluation_session.dart';
 import '../../models/finding.dart';
@@ -277,6 +278,8 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
               metrics: metrics,
               ocrResult: ocr,
               screenshotIndex: _session.screenshots[i].index,
+              appName: _session.appName,
+              mainTask: _session.mainTask,
             );
             allFindings.addAll(perScreenFindings);
           } on AiException catch (e) {
@@ -1324,12 +1327,34 @@ class _OcrPanel extends StatelessWidget {
 
 // ── Findings preview ──────────────────────────────────────────────────────────
 
-class _FindingsPreviewPanel extends StatelessWidget {
+// ── Heuristic breakdown (shown after AI analysis completes) ──────────────────
+//
+// Shows all 10 Nielsen heuristics as a checklist.
+// • Heuristics with no findings → green ✓ (OK)
+// • Heuristics with findings   → coloured badge (worst severity), expandable
+
+class _FindingsPreviewPanel extends StatefulWidget {
   final List<Finding> findings;
   const _FindingsPreviewPanel({required this.findings});
 
   @override
+  State<_FindingsPreviewPanel> createState() => _FindingsPreviewPanelState();
+}
+
+class _FindingsPreviewPanelState extends State<_FindingsPreviewPanel> {
+  final Set<int> _expanded = {};
+
+  @override
   Widget build(BuildContext context) {
+    // Group findings by heuristicId
+    final Map<int, List<Finding>> byH = {};
+    for (final f in widget.findings) {
+      byH.putIfAbsent(f.heuristicId, () => []).add(f);
+    }
+
+    final issueCount = byH.length;
+    final total = widget.findings.length;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Card(
@@ -1339,44 +1364,229 @@ class _FindingsPreviewPanel extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // ── Summary header ──────────────────────────────────────
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: issueCount > 0
+                          ? AppTheme.error.withValues(alpha: 0.1)
+                          : AppTheme.secondary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      issueCount > 0
+                          ? '$total issue${total == 1 ? '' : 's'} across $issueCount heuristic${issueCount == 1 ? '' : 's'}'
+                          : 'No issues detected',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: issueCount > 0
+                            ? AppTheme.error
+                            : AppTheme.secondary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
               Text(
                 'Tap "${AppStrings.proceedToReview}" to accept, edit, or reject each finding.',
                 style: const TextStyle(
-                    fontSize: 13, color: AppTheme.textSecondary),
+                    fontSize: 12, color: AppTheme.textSecondary),
               ),
-              const SizedBox(height: 10),
-              ...findings.map(
-                (f) => Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 28,
-                        height: 28,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: AppTheme.primary.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
+              const Divider(height: 20),
+
+              // ── All 10 heuristics ───────────────────────────────────
+              ...kNielsenHeuristics.map((h) {
+                final hFindings = byH[h.id] ?? [];
+                final hasIssues = hFindings.isNotEmpty;
+                final isExpanded = _expanded.contains(h.id);
+                final worstSev = hasIssues
+                    ? hFindings.map((f) => f.severity).reduce((a, b) => a > b ? a : b)
+                    : 0;
+                final color = hasIssues
+                    ? AppTheme.severityColors[worstSev]
+                    : AppTheme.secondary;
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Row
+                    InkWell(
+                      borderRadius: BorderRadius.circular(8),
+                      onTap: hasIssues
+                          ? () => setState(() {
+                                if (isExpanded) {
+                                  _expanded.remove(h.id);
+                                } else {
+                                  _expanded.add(h.id);
+                                }
+                              })
+                          : null,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: Row(
+                          children: [
+                            // Badge
+                            Container(
+                              width: 30,
+                              height: 30,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: color.withValues(alpha: 0.12),
+                                shape: BoxShape.circle,
+                              ),
+                              child: hasIssues
+                                  ? Text('H${h.id}',
+                                      style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w800,
+                                          color: color))
+                                  : Icon(Icons.check, size: 14, color: color),
+                            ),
+                            const SizedBox(width: 10),
+                            // Name
+                            Expanded(
+                              child: Text(
+                                h.shortName,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: hasIssues
+                                      ? FontWeight.w600
+                                      : FontWeight.normal,
+                                  color: hasIssues
+                                      ? AppTheme.textPrimary
+                                      : AppTheme.textSecondary,
+                                ),
+                              ),
+                            ),
+                            // Count or OK
+                            if (hasIssues) ...[
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 7, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: color.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text('${hFindings.length}',
+                                    style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                        color: color)),
+                              ),
+                              const SizedBox(width: 4),
+                              Icon(
+                                isExpanded
+                                    ? Icons.expand_less
+                                    : Icons.expand_more,
+                                size: 18,
+                                color: AppTheme.textSecondary,
+                              ),
+                            ] else
+                              const Text('OK',
+                                  style: TextStyle(
+                                      fontSize: 11, color: AppTheme.secondary)),
+                          ],
                         ),
-                        child: Text('H${f.heuristicId}',
-                            style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: AppTheme.primary)),
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(f.title,
-                            style: const TextStyle(
-                                fontSize: 13, color: AppTheme.textPrimary)),
+                    ),
+
+                    // Expanded findings detail
+                    if (hasIssues && isExpanded)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 40, bottom: 6),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: hFindings.map((f) {
+                            final sc = AppTheme.severityColors[f.severity.clamp(0, 4)];
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: sc.withValues(alpha: 0.06),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                      color: sc.withValues(alpha: 0.3)),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(children: [
+                                      Expanded(
+                                        child: Text(f.title,
+                                            style: const TextStyle(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w600,
+                                                color: AppTheme.textPrimary)),
+                                      ),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: sc.withValues(alpha: 0.15),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                        ),
+                                        child: Text(
+                                          AppTheme.severityLabels[
+                                              f.severity.clamp(0, 4)],
+                                          style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w600,
+                                              color: sc),
+                                        ),
+                                      ),
+                                    ]),
+                                    if (f.affectedElement.isNotEmpty) ...[
+                                      const SizedBox(height: 3),
+                                      Row(children: [
+                                        const Icon(Icons.touch_app_outlined,
+                                            size: 12,
+                                            color: AppTheme.textSecondary),
+                                        const SizedBox(width: 4),
+                                        Text(f.affectedElement,
+                                            style: const TextStyle(
+                                                fontSize: 11,
+                                                color: AppTheme.textSecondary,
+                                                fontStyle: FontStyle.italic)),
+                                      ]),
+                                    ],
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      f.reason.length > 120
+                                          ? '${f.reason.substring(0, 120)}…'
+                                          : f.reason,
+                                      style: const TextStyle(
+                                          fontSize: 12,
+                                          color: AppTheme.textSecondary,
+                                          height: 1.4),
+                                    ),
+                                    if (f.screenshotIndex != null) ...[
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'Screen ${f.screenshotIndex} · ${(f.confidence * 100).round()}% confidence',
+                                        style: const TextStyle(
+                                            fontSize: 11,
+                                            color: AppTheme.textSecondary),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
                       ),
-                      Text('${(f.confidence * 100).round()}%',
-                          style: const TextStyle(
-                              fontSize: 12, color: AppTheme.textSecondary)),
-                    ],
-                  ),
-                ),
-              ),
+
+                    if (h.id < 10) const Divider(height: 1),
+                  ],
+                );
+              }),
             ],
           ),
         ),

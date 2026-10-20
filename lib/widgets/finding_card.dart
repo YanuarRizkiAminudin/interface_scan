@@ -73,6 +73,28 @@ class FindingCard extends StatelessWidget {
               ),
             ),
 
+            // Affected element (from AI or manual)
+            if (finding.affectedElement.isNotEmpty) ...[
+              const SizedBox(height: 3),
+              Row(
+                children: [
+                  const Icon(Icons.touch_app_outlined,
+                      size: 12, color: AppTheme.textSecondary),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      finding.affectedElement,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppTheme.textSecondary,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+
             // Screenshot attribution
             if (finding.screenshotIndex != null) ...[
               const SizedBox(height: 2),

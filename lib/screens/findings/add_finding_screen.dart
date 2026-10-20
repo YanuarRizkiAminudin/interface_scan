@@ -26,6 +26,7 @@ class _AddFindingScreenState extends State<AddFindingScreen> {
   final _uuid = const Uuid();
 
   final _titleCtrl = TextEditingController();
+  final _affectedCtrl = TextEditingController();
   final _reasonCtrl = TextEditingController();
   final _recCtrl = TextEditingController();
 
@@ -39,6 +40,7 @@ class _AddFindingScreenState extends State<AddFindingScreen> {
   @override
   void dispose() {
     _titleCtrl.dispose();
+    _affectedCtrl.dispose();
     _reasonCtrl.dispose();
     _recCtrl.dispose();
     super.dispose();
@@ -66,6 +68,7 @@ class _AddFindingScreenState extends State<AddFindingScreen> {
       id: _uuid.v4(),
       heuristicId: _heuristicId,
       title: _titleCtrl.text.trim(),
+      affectedElement: _affectedCtrl.text.trim(),
       reason: _reasonCtrl.text.trim(),
       recommendation: _recCtrl.text.trim(),
       confidence: 1.0, // manually added = full confidence
@@ -192,6 +195,21 @@ class _AddFindingScreenState extends State<AddFindingScreen> {
                 setState(() => _titleError = null);
               }
             },
+          ),
+
+          const SizedBox(height: 16),
+
+          // ── Affected element ──────────────────────────────────────────
+          const _FieldLabel(label: 'Affected Element'),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _affectedCtrl,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: const InputDecoration(
+              hintText: 'e.g. Login button, Navigation bar, Form field…',
+              filled: true,
+              fillColor: Colors.white,
+            ),
           ),
 
           const SizedBox(height: 16),

@@ -32,15 +32,21 @@ class Finding {
   /// Actionable recommendation for fixing the issue.
   final String recommendation;
 
-  /// Confidence score (0.0–1.0). AI findings use AI's confidence;
-  /// manually-added findings use 1.0.
+  /// Confidence score (0.0–1.0).
+  /// AI findings use AI confidence; manually-added findings use 1.0.
   final double confidence;
 
   /// 1-based index of the screenshot this finding relates to.
-  /// null means it applies to the whole session (e.g. from aggregate analysis).
+  /// null means it applies to the whole session.
   final int? screenshotIndex;
 
+  /// The specific UI element or area where the issue was detected.
+  /// e.g. "Login button", "Navigation bar", "Form field".
+  /// Set by AI; evaluator can override during edit.
+  String affectedElement;
+
   /// Human-assigned severity (0 = cosmetic … 4 = catastrophic).
+  /// Initially set from AI suggestion; evaluator can override.
   int severity;
 
   /// Human verdict: pending / accepted / rejected.
@@ -57,6 +63,7 @@ class Finding {
     required this.recommendation,
     required this.confidence,
     this.screenshotIndex,
+    this.affectedElement = '',
     this.severity = 2,
     this.status = FindingStatus.pending,
     this.evaluatorNote,
@@ -70,6 +77,7 @@ class Finding {
     String? recommendation,
     double? confidence,
     int? screenshotIndex,
+    String? affectedElement,
     int? severity,
     FindingStatus? status,
     String? evaluatorNote,
@@ -82,6 +90,7 @@ class Finding {
         recommendation: recommendation ?? this.recommendation,
         confidence: confidence ?? this.confidence,
         screenshotIndex: screenshotIndex ?? this.screenshotIndex,
+        affectedElement: affectedElement ?? this.affectedElement,
         severity: severity ?? this.severity,
         status: status ?? this.status,
         evaluatorNote: evaluatorNote ?? this.evaluatorNote,
@@ -95,6 +104,7 @@ class Finding {
         'recommendation': recommendation,
         'confidence': confidence,
         if (screenshotIndex != null) 'screenshotIndex': screenshotIndex,
+        'affectedElement': affectedElement,
         'severity': severity,
         'status': status.name,
         if (evaluatorNote != null) 'evaluatorNote': evaluatorNote,
@@ -108,6 +118,7 @@ class Finding {
         recommendation: json['recommendation'] as String,
         confidence: (json['confidence'] as num).toDouble(),
         screenshotIndex: json['screenshotIndex'] as int?,
+        affectedElement: json['affectedElement'] as String? ?? '',
         severity: json['severity'] as int,
         status: FindingStatus.values.byName(json['status'] as String),
         evaluatorNote: json['evaluatorNote'] as String?,

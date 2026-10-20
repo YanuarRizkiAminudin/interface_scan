@@ -371,6 +371,7 @@ class _EditFindingDialog extends StatefulWidget {
 
 class _EditFindingDialogState extends State<_EditFindingDialog> {
   late final TextEditingController _titleCtrl;
+  late final TextEditingController _affectedCtrl;
   late final TextEditingController _reasonCtrl;
   late final TextEditingController _recCtrl;
   late final TextEditingController _noteCtrl;
@@ -382,6 +383,7 @@ class _EditFindingDialogState extends State<_EditFindingDialog> {
     super.initState();
     final f = widget.finding;
     _titleCtrl = TextEditingController(text: f.title);
+    _affectedCtrl = TextEditingController(text: f.affectedElement);
     _reasonCtrl = TextEditingController(text: f.reason);
     _recCtrl = TextEditingController(text: f.recommendation);
     _noteCtrl = TextEditingController(text: f.evaluatorNote ?? '');
@@ -392,6 +394,7 @@ class _EditFindingDialogState extends State<_EditFindingDialog> {
   @override
   void dispose() {
     _titleCtrl.dispose();
+    _affectedCtrl.dispose();
     _reasonCtrl.dispose();
     _recCtrl.dispose();
     _noteCtrl.dispose();
@@ -401,6 +404,7 @@ class _EditFindingDialogState extends State<_EditFindingDialog> {
   Finding _build() => widget.finding.copyWith(
         heuristicId: _heuristicId,
         title: _titleCtrl.text.trim(),
+        affectedElement: _affectedCtrl.text.trim(),
         reason: _reasonCtrl.text.trim(),
         recommendation: _recCtrl.text.trim(),
         severity: _severity,
@@ -459,6 +463,8 @@ class _EditFindingDialogState extends State<_EditFindingDialog> {
             const SizedBox(height: 12),
 
             _Field(label: AppStrings.findingTitle, controller: _titleCtrl),
+            const SizedBox(height: 12),
+            _Field(label: 'Affected Element', controller: _affectedCtrl),
             const SizedBox(height: 12),
             _Field(label: AppStrings.reason, controller: _reasonCtrl, maxLines: 3),
             const SizedBox(height: 12),
