@@ -9,6 +9,9 @@
     <!-- Read images from the gallery (Android 13+) -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 
+    <!-- Camera permission for "Take a Photo" feature -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
     <!-- Internet access for Gemini AI API calls -->
     <uses-permission android:name="android.permission.INTERNET" />
 

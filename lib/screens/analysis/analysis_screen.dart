@@ -114,29 +114,90 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
 
   // ── Actions ───────────────────────────────────────────────────────────────
 
-  Future<void> _addScreenshots() async {
+  /// Shows a bottom sheet to choose between Gallery or Camera.
+  Future<void> _showAddMenu() async {
     if (!_canAddMore) {
       if (_session.screenshotCount >= _maxScreenshots) {
         _showSnack(AppStrings.maxScreenshotsReached);
       }
       return;
     }
+    await showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Text(
+                'Add Screenshot',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+            ),
+            ListTile(
+              leading: const CircleAvatar(
+                backgroundColor: Color(0xFFE8F0FE),
+                child: Icon(Icons.photo_library_outlined,
+                    color: Color(0xFF1A73E8)),
+              ),
+              title: const Text('Choose from Gallery'),
+              subtitle: const Text('Pick existing screenshots from device'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _pickFromGallery();
+              },
+            ),
+            ListTile(
+              leading: const CircleAvatar(
+                backgroundColor: Color(0xFFE6F4EA),
+                child: Icon(Icons.camera_alt_outlined,
+                    color: Color(0xFF34A853)),
+              ),
+              title: const Text('Take a Photo'),
+              subtitle: const Text('Point camera at a screen to capture'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _takePhoto();
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickFromGallery() async {
+    if (!_canAddMore) return;
     final remaining = _maxScreenshots - _session.screenshotCount;
     final picked = await _picker.pickMultiImage(limit: remaining);
     if (picked.isEmpty) return;
+    _addFiles(picked.map((x) => x.path).toList());
+  }
 
+  Future<void> _takePhoto() async {
+    if (!_canAddMore) return;
+    final photo = await _picker.pickImage(
+      source: ImageSource.camera,
+      preferredCameraDevice: CameraDevice.rear,
+      imageQuality: 95,
+    );
+    if (photo == null) return;
+    _addFiles([photo.path]);
+  }
+
+  void _addFiles(List<String> paths) {
     setState(() {
-      for (final xFile in picked) {
+      for (final path in paths) {
         final idx = _session.screenshotCount + 1;
         _session.screenshots
-            .add(ScreenshotAnalysis(imagePath: xFile.path, index: idx));
+            .add(ScreenshotAnalysis(imagePath: path, index: idx));
       }
       _resetAnalysisState();
     });
-
-    // Persist immediately so the session appears in Home history right away.
     _syncContext();
-    await _storage.saveSession(_session);
+    _storage.saveSession(_session);
   }
 
   void _removeScreenshot(int index) {
@@ -422,7 +483,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             _ScreenshotGrid(
               screenshots: _session.screenshots,
               canAdd: _canAddMore,
-              onAdd: _addScreenshots,
+              onAdd: _showAddMenu,
               onRemove: _removeScreenshot,
               onRename: _renameScreenshot,
             ),
