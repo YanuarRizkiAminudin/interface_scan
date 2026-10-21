@@ -6,37 +6,33 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/evaluation_session.dart';
+import 'firebase_service.dart';
 
-/// Persists evaluation sessions to the app-documents directory (JSON files)
-/// and keeps an index in SharedPreferences.
+/// Offline-first storage with cloud sync.
 ///
-/// The Gemini API key is stored separately using [FlutterSecureStorage] so it
-/// is encrypted at rest (Android Keystore / iOS Keychain) and never written
-/// as plain text in SharedPreferences or committed to source control.
+/// Every write goes to LOCAL storage first (always works, even offline),
+/// then also to Firestore (silently skipped if offline).
+///
+/// On load, we merge local + Firestore data so the list is always complete
+/// regardless of connectivity.
 class StorageService {
-  // ── Keys ──────────────────────────────────────────────────────────────────
-
   static const String _indexKey = 'session_index';
   static const String _apiKeySecureKey = 'gemini_api_key';
 
-  // Secure storage instance with Android AES encryption.
   static const _secure = FlutterSecureStorage(
     aOptions: AndroidOptions(encryptedSharedPreferences: true),
   );
 
-  // ── API key (secure) ──────────────────────────────────────────────────────
+  // ── API key ───────────────────────────────────────────────────────────────
 
-  /// Reads the API key from secure storage. Returns empty string if not set.
   Future<String> getApiKey() async {
     try {
       return await _secure.read(key: _apiKeySecureKey) ?? '';
     } catch (_) {
-      // If secure storage fails (e.g. first launch on some emulators), return empty.
       return '';
     }
   }
 
-  /// Saves the API key to secure storage (encrypted at rest).
   Future<void> saveApiKey(String key) async {
     final trimmed = key.trim();
     if (trimmed.isEmpty) {
@@ -46,7 +42,7 @@ class StorageService {
     }
   }
 
-  // ── Session storage ───────────────────────────────────────────────────────
+  // ── Session storage — local ───────────────────────────────────────────────
 
   Future<Directory> _sessionDir() async {
     final docs = await getApplicationDocumentsDirectory();
@@ -60,44 +56,69 @@ class StorageService {
     return File('${dir.path}/$id.json');
   }
 
-  /// Saves or overwrites a session on disk and updates the index.
-  /// The caller is responsible for setting [session.updatedAt] before calling.
+  /// Saves a session locally AND syncs to Firestore.
   Future<void> saveSession(EvaluationSession session) async {
-    // Update timestamp here so it's always accurate at save time.
     session.updatedAt = DateTime.now();
+
+    // 1. Save locally (always works)
     final file = await _sessionFile(session.id);
     await file.writeAsString(session.toJsonString(), flush: true);
     await _addToIndex(session.id);
+
+    // 2. Sync to Firestore (silently ignored if offline)
+    await FirebaseService.saveSession(session);
   }
 
-  /// Loads a single session by ID. Returns null if not found or corrupted.
+  /// Loads a single session — local first, fallback to Firestore.
   Future<EvaluationSession?> loadSession(String id) async {
     try {
       final file = await _sessionFile(id);
-      if (!await file.exists()) return null;
-      return EvaluationSession.fromJsonString(await file.readAsString());
+      if (await file.exists()) {
+        return EvaluationSession.fromJsonString(
+            await file.readAsString());
+      }
+      // Not found locally — try Firestore
+      return await FirebaseService.loadSession(id);
     } catch (_) {
       return null;
     }
   }
 
-  /// Loads all sessions sorted newest-first.
+  /// Loads all sessions.
+  /// Merges local + Firestore: Firestore data fills in any gaps
+  /// (e.g. sessions created on another device).
   Future<List<EvaluationSession>> loadAllSessions() async {
+    // Local sessions
     final ids = await _getIndex();
-    final sessions = <EvaluationSession>[];
+    final local = <EvaluationSession>[];
     for (final id in ids) {
       final s = await loadSession(id);
-      if (s != null) sessions.add(s);
+      if (s != null) local.add(s);
     }
-    sessions.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-    return sessions;
+
+    // Cloud sessions (fills gaps, does not duplicate)
+    final cloud = await FirebaseService.loadAllSessions();
+    final localIds = local.map((s) => s.id).toSet();
+    for (final cs in cloud) {
+      if (!localIds.contains(cs.id)) {
+        // New session from cloud — save locally too
+        final file = await _sessionFile(cs.id);
+        await file.writeAsString(cs.toJsonString(), flush: true);
+        await _addToIndex(cs.id);
+        local.add(cs);
+      }
+    }
+
+    local.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+    return local;
   }
 
-  /// Deletes a session from disk and removes it from the index.
+  /// Deletes a session locally AND from Firestore.
   Future<void> deleteSession(String id) async {
     await _removeFromIndex(id);
     final file = await _sessionFile(id);
     if (await file.exists()) await file.delete();
+    await FirebaseService.deleteSession(id);
   }
 
   // ── Index helpers ─────────────────────────────────────────────────────────
