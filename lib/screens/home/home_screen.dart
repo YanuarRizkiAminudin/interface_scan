@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/evaluation_session.dart';
+import '../../services/auth_service.dart';
 import '../../services/storage_service.dart';
 import '../../widgets/safe_file_image.dart';
 import '../analysis/analysis_screen.dart';
@@ -144,6 +145,31 @@ class _HomeScreenState extends State<HomeScreen> {
   void _openSettings() => Navigator.push(
       context, MaterialPageRoute(builder: (_) => const SettingsScreen()));
 
+  Future<void> _signOut() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Sign Out'),
+        content: const Text('Are you sure you want to sign out?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: AppTheme.error),
+            child: const Text('Sign Out'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await AuthService.signOut();
+      // StreamBuilder in main.dart will auto-navigate to LoginScreen
+    }
+  }
+
   void _toggleSearch() {
     setState(() {
       _searchVisible = !_searchVisible;
@@ -212,6 +238,14 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: const Icon(Icons.settings_outlined),
             tooltip: AppStrings.settings,
             onPressed: _openSettings,
+          ),
+          // User avatar with sign-out on tap
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: GestureDetector(
+              onTap: _signOut,
+              child: _UserAvatar(),
+            ),
           ),
         ],
       ),
@@ -519,6 +553,38 @@ class _Chip extends StatelessWidget {
       child: Text(label,
           style: TextStyle(
               fontSize: 11, fontWeight: FontWeight.w600, color: color)),
+    );
+  }
+}
+
+// ── User avatar (shown in AppBar, tap to sign out) ────────────────────────────
+
+class _UserAvatar extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final user = AuthService.currentUser;
+    final photoUrl = user?.photoURL;
+    final name = user?.displayName ?? user?.email ?? 'User';
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : 'U';
+
+    return Tooltip(
+      message: 'Signed in as $name\nTap to sign out',
+      child: CircleAvatar(
+        radius: 16,
+        backgroundColor: Colors.white.withValues(alpha: 0.9),
+        backgroundImage:
+            photoUrl != null ? NetworkImage(photoUrl) : null,
+        child: photoUrl == null
+            ? Text(
+                initial,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.primary,
+                ),
+              )
+            : null,
+      ),
     );
   }
 }
