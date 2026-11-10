@@ -1,5 +1,5 @@
-// Generated from google-services.json
-// Project: interfacescan (InterfaceScan)
+// Generated from google-services.json (with OAuth client / SHA-1)
+// Project: interfacescan
 
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
