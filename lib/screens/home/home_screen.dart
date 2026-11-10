@@ -18,12 +18,16 @@ enum _SortOption { newest, oldest, mostFindings }
 extension _SortOptionX on _SortOption {
   String get label {
     switch (this) {
-      case _SortOption.newest:
-        return 'Newest first';
-      case _SortOption.oldest:
-        return 'Oldest first';
-      case _SortOption.mostFindings:
-        return 'Most findings';
+      case _SortOption.newest:      return 'Newest first';
+      case _SortOption.oldest:      return 'Oldest first';
+      case _SortOption.mostFindings:return 'Most findings';
+    }
+  }
+  IconData get icon {
+    switch (this) {
+      case _SortOption.newest:      return Icons.arrow_downward_rounded;
+      case _SortOption.oldest:      return Icons.arrow_upward_rounded;
+      case _SortOption.mostFindings:return Icons.bar_chart_rounded;
     }
   }
 }
@@ -43,7 +47,6 @@ class _HomeScreenState extends State<HomeScreen> {
   List<EvaluationSession> _filtered = [];
   bool _loading = true;
 
-  // Search & sort state
   final _searchCtrl = TextEditingController();
   _SortOption _sort = _SortOption.newest;
   bool _searchVisible = false;
@@ -61,8 +64,6 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  // ── Data ───────────────────────────────────────────────────────────────────
-
   Future<void> _loadSessions() async {
     setState(() => _loading = true);
     final sessions = await _storage.loadAllSessions();
@@ -74,14 +75,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _applyFilter() {
-    final query = _searchCtrl.text.trim().toLowerCase();
-    List<EvaluationSession> result = query.isEmpty
+    final q = _searchCtrl.text.trim().toLowerCase();
+    var result = q.isEmpty
         ? List.of(_all)
-        : _all.where((s) {
-            return s.name.toLowerCase().contains(query) ||
-                s.appName.toLowerCase().contains(query) ||
-                s.mainTask.toLowerCase().contains(query);
-          }).toList();
+        : _all.where((s) =>
+            s.name.toLowerCase().contains(q) ||
+            s.appName.toLowerCase().contains(q) ||
+            s.mainTask.toLowerCase().contains(q)).toList();
 
     switch (_sort) {
       case _SortOption.newest:
@@ -94,28 +94,20 @@ class _HomeScreenState extends State<HomeScreen> {
         result.sort((a, b) => b.totalFindings.compareTo(a.totalFindings));
         break;
     }
-
     if (mounted) setState(() => _filtered = result);
   }
-
-  // ── Navigation ─────────────────────────────────────────────────────────────
 
   Future<void> _openNewAnalysis() async {
     final apiKey = await _storage.getApiKey();
     if (!mounted) return;
-    await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => AnalysisScreen(apiKey: apiKey)),
-    );
+    await Navigator.push(context,
+        MaterialPageRoute(builder: (_) => AnalysisScreen(apiKey: apiKey)));
     _loadSessions();
   }
 
   Future<void> _openSession(EvaluationSession session) async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-          builder: (_) => EvaluationDetailScreen(session: session)),
-    );
+    await Navigator.push(context,
+        MaterialPageRoute(builder: (_) => EvaluationDetailScreen(session: session)));
     _loadSessions();
   }
 
@@ -153,29 +145,22 @@ class _HomeScreenState extends State<HomeScreen> {
         content: const Text('Are you sure you want to sign out?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
-          ),
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel')),
           TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: AppTheme.error),
-            child: const Text('Sign Out'),
-          ),
+              onPressed: () => Navigator.pop(ctx, true),
+              style: TextButton.styleFrom(foregroundColor: AppTheme.error),
+              child: const Text('Sign Out')),
         ],
       ),
     );
-    if (confirmed == true) {
-      await AuthService.signOut();
-      // StreamBuilder in main.dart will auto-navigate to LoginScreen
-    }
+    if (confirmed == true) await AuthService.signOut();
   }
 
   void _toggleSearch() {
     setState(() {
       _searchVisible = !_searchVisible;
-      if (!_searchVisible) {
-        _searchCtrl.clear();
-      }
+      if (!_searchVisible) _searchCtrl.clear();
     });
   }
 
@@ -186,22 +171,35 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Handle bar
+            Center(
+              child: Container(
+                margin: const EdgeInsets.only(top: 12, bottom: 8),
+                width: 40, height: 4,
+                decoration: BoxDecoration(
+                  color: AppTheme.divider,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                ),
+              ),
+            ),
             const Padding(
-              padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: Text('Sort by',
-                  style: TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w600)),
+              padding: EdgeInsets.fromLTRB(16, 4, 16, 8),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text('Sort evaluations',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+              ),
             ),
             ..._SortOption.values.map((opt) => ListTile(
+                  leading: Icon(opt.icon,
+                      color: _sort == opt
+                          ? AppTheme.primary
+                          : AppTheme.textSecondary),
                   title: Text(opt.label),
-                  leading: Icon(
-                    _sort == opt
-                        ? Icons.radio_button_checked
-                        : Icons.radio_button_off,
-                    color: _sort == opt
-                        ? AppTheme.primary
-                        : AppTheme.textSecondary,
-                  ),
+                  trailing: _sort == opt
+                      ? const Icon(Icons.check_rounded,
+                          color: AppTheme.primary)
+                      : null,
                   onTap: () => Navigator.pop(ctx, opt),
                 )),
             const SizedBox(height: 8),
@@ -215,70 +213,71 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // ── Build ──────────────────────────────────────────────────────────────────
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text(AppStrings.appName),
         actions: [
+          // Search toggle
           IconButton(
-            icon: Icon(
-                _searchVisible ? Icons.search_off : Icons.search),
+            icon: Icon(_searchVisible
+                ? Icons.search_off_rounded
+                : Icons.search_rounded),
             tooltip: 'Search',
             onPressed: _toggleSearch,
           ),
+          // Sort
           IconButton(
-            icon: const Icon(Icons.sort),
+            icon: const Icon(Icons.sort_rounded),
             tooltip: 'Sort',
             onPressed: _showSortMenu,
           ),
+          // Settings
           IconButton(
             icon: const Icon(Icons.settings_outlined),
             tooltip: AppStrings.settings,
             onPressed: _openSettings,
           ),
-          // User avatar with sign-out on tap
+          // User avatar
           Padding(
-            padding: const EdgeInsets.only(right: 8),
+            padding: const EdgeInsets.only(right: 12),
             child: GestureDetector(
               onTap: _signOut,
-              child: _UserAvatar(),
+              child: const _UserAvatar(),
             ),
           ),
         ],
       ),
       body: Column(
         children: [
-          // ── Search bar (collapsible) ───────────────────────────────
+          // ── Search bar ─────────────────────────────────────────────
           AnimatedSize(
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeInOut,
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOut,
             child: _searchVisible
-                ? Padding(
-                    padding:
-                        const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                ? Container(
+                    color: AppTheme.primary,
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                     child: TextField(
                       controller: _searchCtrl,
                       autofocus: true,
+                      style: const TextStyle(fontSize: 15),
                       decoration: InputDecoration(
-                        hintText:
-                            'Search by name, app, or task…',
-                        prefixIcon: const Icon(Icons.search,
-                            size: 20),
+                        hintText: 'Search by name, app, or task…',
+                        prefixIcon:
+                            const Icon(Icons.search_rounded, size: 20),
                         suffixIcon: _searchCtrl.text.isNotEmpty
                             ? IconButton(
-                                icon: const Icon(Icons.clear,
+                                icon: const Icon(Icons.clear_rounded,
                                     size: 18),
-                                onPressed: () =>
-                                    _searchCtrl.clear(),
+                                onPressed: _searchCtrl.clear,
                               )
                             : null,
                         filled: true,
                         fillColor: Colors.white,
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 10),
+                        contentPadding:
+                            const EdgeInsets.symmetric(vertical: 10),
                         isDense: true,
                       ),
                     ),
@@ -286,47 +285,56 @@ class _HomeScreenState extends State<HomeScreen> {
                 : const SizedBox.shrink(),
           ),
 
-          // ── Session list ───────────────────────────────────────────
+          // ── List ───────────────────────────────────────────────────
           Expanded(
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
                 : _all.isEmpty
                     ? const _EmptyState()
                     : _filtered.isEmpty
-                        ? const Center(
-                            child: Text(
-                              'No evaluations match your search.',
-                              style: TextStyle(
-                                  color: AppTheme.textSecondary),
+                        ? Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.search_off_rounded,
+                                    size: 48,
+                                    color: AppTheme.textSecondary
+                                        .withValues(alpha: 0.4)),
+                                const SizedBox(height: 12),
+                                const Text('No evaluations match.',
+                                    style: TextStyle(
+                                        color: AppTheme.textSecondary)),
+                              ],
                             ),
                           )
                         : RefreshIndicator(
                             onRefresh: _loadSessions,
-                            child: ListView(
+                            child: ListView.builder(
                               padding: const EdgeInsets.only(
                                   top: 8, bottom: 100),
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16, vertical: 4),
-                                  child: Text(
-                                    '${_filtered.length} '
-                                    '${_filtered.length == 1 ? AppStrings.evaluation : AppStrings.evaluations}'
-                                    '${_searchCtrl.text.isNotEmpty ? ' found' : ''}',
-                                    style: const TextStyle(
-                                        fontSize: 13,
-                                        color: AppTheme.textSecondary),
-                                  ),
-                                ),
-                                ..._filtered.map(
-                                  (s) => _SessionCard(
-                                    session: s,
-                                    onTap: () => _openSession(s),
-                                    onDelete: () =>
-                                        _deleteSession(s),
-                                  ),
-                                ),
-                              ],
+                              itemCount: _filtered.length + 1,
+                              itemBuilder: (ctx, i) {
+                                if (i == 0) {
+                                  return Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                        16, 4, 16, 8),
+                                    child: Text(
+                                      '${_filtered.length} '
+                                      '${_filtered.length == 1 ? AppStrings.evaluation : AppStrings.evaluations}'
+                                      '${_searchCtrl.text.isNotEmpty ? ' found' : ''}',
+                                      style: const TextStyle(
+                                          fontSize: 12,
+                                          color: AppTheme.textSecondary),
+                                    ),
+                                  );
+                                }
+                                final s = _filtered[i - 1];
+                                return _SessionCard(
+                                  session: s,
+                                  onTap: () => _openSession(s),
+                                  onDelete: () => _deleteSession(s),
+                                );
+                              },
                             ),
                           ),
           ),
@@ -338,6 +346,7 @@ class _HomeScreenState extends State<HomeScreen> {
         label: const Text(AppStrings.newEvaluation),
         backgroundColor: AppTheme.primary,
         foregroundColor: Colors.white,
+        elevation: 3,
       ),
     );
   }
@@ -356,14 +365,21 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.image_search,
-                size: 72,
-                color: AppTheme.primary.withValues(alpha: 0.35)),
+            Container(
+              width: 96,
+              height: 96,
+              decoration: BoxDecoration(
+                color: AppTheme.primaryLight,
+                borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+              ),
+              child: const Icon(Icons.image_search_rounded,
+                  size: 48, color: AppTheme.primary),
+            ),
             const SizedBox(height: 24),
             const Text(AppStrings.appName,
                 style: TextStyle(
                     fontSize: 22,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w800,
                     color: AppTheme.textPrimary)),
             const SizedBox(height: 8),
             const Text(AppStrings.appTagline,
@@ -373,9 +389,9 @@ class _EmptyState extends StatelessWidget {
             Text(
               AppStrings.noEvaluationsYet,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                   fontSize: 14,
-                  color: AppTheme.textSecondary.withValues(alpha: 0.8),
+                  color: AppTheme.textSecondary,
                   height: 1.6),
             ),
           ],
@@ -400,121 +416,174 @@ class _SessionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fmt = DateFormat('dd MMM yyyy, HH:mm');
+    final fmt = DateFormat('dd MMM yyyy');
     final accepted = session.acceptedCount;
-    final pending = session.pendingCount;
-    final total = session.totalFindings;
-    final count = session.screenshotCount;
+    final pending  = session.pendingCount;
+    final total    = session.totalFindings;
+    final count    = session.screenshotCount;
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Row(
-            children: [
-              // Thumbnail
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: SizedBox(
-                  width: 56,
-                  height: 56,
-                  child: session.hasScreenshots
-                      ? SafeFileImage(
-                          path: session.screenshots.first.imagePath,
-                          fit: BoxFit.cover,
-                          width: 56,
-                          height: 56,
-                          fallback: const _ImagePlaceholder(),
-                        )
-                      : const _ImagePlaceholder(),
-                ),
-              ),
-              const SizedBox(width: 14),
-
-              // Info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      session.name,
-                      style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.textPrimary),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (session.appName.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Text(session.appName,
-                          style: const TextStyle(
-                              fontSize: 12,
-                              color: AppTheme.primary,
-                              fontWeight: FontWeight.w500),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis),
-                    ],
-                    const SizedBox(height: 3),
-                    Text(fmt.format(session.updatedAt),
-                        style: const TextStyle(
-                            fontSize: 12,
-                            color: AppTheme.textSecondary)),
-                    const SizedBox(height: 6),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 4,
-                      children: [
-                        // Screenshot count
-                        _Chip(
-                          label:
-                              '$count ${count == 1 ? AppStrings.screen : AppStrings.screens2}',
-                          color: AppTheme.textSecondary,
-                        ),
-                        // Total findings
-                        if (total > 0)
-                          _Chip(
-                            label:
-                                '$total ${total == 1 ? AppStrings.finding : AppStrings.findings}',
-                            color: AppTheme.primary,
-                          ),
-                        // Accepted
-                        if (accepted > 0)
-                          _Chip(
-                            label:
-                                '$accepted ${AppStrings.accepted.toLowerCase()}',
-                            color: AppTheme.secondary,
-                          ),
-                        // Pending badge — draws attention to unreviewed findings
-                        if (pending > 0)
-                          _Chip(
-                            label:
-                                '$pending ${AppStrings.pending.toLowerCase()}',
-                            color: AppTheme.warning,
-                          ),
-                        // Redesign
-                        if (session.hasRedesign)
-                          _Chip(
-                            label: AppStrings.redesignBadge,
-                            color: AppTheme.warning,
-                          ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              // Delete
-              IconButton(
-                icon: const Icon(Icons.delete_outline,
-                    color: AppTheme.textSecondary),
-                onPressed: onDelete,
-                tooltip: AppStrings.delete,
-              ),
+    return Dismissible(
+      key: Key(session.id),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        margin: const EdgeInsets.symmetric(
+            horizontal: AppTheme.sp16, vertical: AppTheme.sp4),
+        decoration: BoxDecoration(
+          color: AppTheme.error,
+          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+        ),
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        child: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.delete_outline_rounded,
+                color: Colors.white, size: 24),
+            SizedBox(height: 4),
+            Text('Delete',
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600)),
+          ],
+        ),
+      ),
+      confirmDismiss: (_) async {
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text(AppStrings.deleteEvaluation),
+            content: const Text(AppStrings.deleteConfirm),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: const Text(AppStrings.cancel)),
+              TextButton(
+                  onPressed: () => Navigator.pop(ctx, true),
+                  style:
+                      TextButton.styleFrom(foregroundColor: AppTheme.error),
+                  child: const Text(AppStrings.delete)),
             ],
+          ),
+        );
+        return confirmed == true;
+      },
+      onDismissed: (_) => onDelete(),
+      child: Card(
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              children: [
+                // ── Thumbnail ────────────────────────────────────────
+                ClipRRect(
+                  borderRadius:
+                      BorderRadius.circular(AppTheme.radiusSm),
+                  child: SizedBox(
+                    width: 64,
+                    height: 64,
+                    child: session.hasScreenshots
+                        ? SafeFileImage(
+                            path: session.screenshots.first.imagePath,
+                            fit: BoxFit.cover,
+                            width: 64,
+                            height: 64,
+                            fallback: const _ImagePlaceholder(),
+                          )
+                        : const _ImagePlaceholder(),
+                  ),
+                ),
+
+                const SizedBox(width: 14),
+
+                // ── Info ─────────────────────────────────────────────
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Name
+                      Text(
+                        session.name,
+                        style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.textPrimary,
+                            height: 1.2),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+
+                      // App name
+                      if (session.appName.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Row(children: [
+                          const Icon(Icons.apps_rounded,
+                              size: 12, color: AppTheme.primary),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(session.appName,
+                                style: const TextStyle(
+                                    fontSize: 12,
+                                    color: AppTheme.primary,
+                                    fontWeight: FontWeight.w500),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis),
+                          ),
+                        ]),
+                      ],
+
+                      const SizedBox(height: 4),
+
+                      // Date
+                      Text(fmt.format(session.updatedAt),
+                          style: const TextStyle(
+                              fontSize: 11,
+                              color: AppTheme.textSecondary)),
+
+                      const SizedBox(height: 6),
+
+                      // Chips
+                      Wrap(
+                        spacing: 5,
+                        runSpacing: 4,
+                        children: [
+                          _Chip(
+                            label: '$count screen${count == 1 ? '' : 's'}',
+                            color: AppTheme.textSecondary,
+                          ),
+                          if (total > 0)
+                            _Chip(
+                              label: '$total finding${total == 1 ? '' : 's'}',
+                              color: AppTheme.primary,
+                            ),
+                          if (accepted > 0)
+                            _Chip(
+                              label: '$accepted accepted',
+                              color: AppTheme.secondary,
+                            ),
+                          if (pending > 0)
+                            _Chip(
+                              label: '$pending pending',
+                              color: AppTheme.warning,
+                            ),
+                          if (session.hasRedesign)
+                            _Chip(
+                              label: 'Redesign',
+                              color: AppTheme.primary,
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                // ── Chevron ──────────────────────────────────────────
+                const Icon(Icons.chevron_right_rounded,
+                    color: AppTheme.textSecondary, size: 20),
+              ],
+            ),
           ),
         ),
       ),
@@ -530,9 +599,9 @@ class _ImagePlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppTheme.surface,
+      color: AppTheme.primaryLight,
       child: const Icon(Icons.image_outlined,
-          color: AppTheme.textSecondary, size: 28),
+          color: AppTheme.primary, size: 28),
     );
   }
 }
@@ -545,32 +614,35 @@ class _Chip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(20),
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
       ),
       child: Text(label,
           style: TextStyle(
-              fontSize: 11, fontWeight: FontWeight.w600, color: color)),
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: color)),
     );
   }
 }
 
-// ── User avatar (shown in AppBar, tap to sign out) ────────────────────────────
-
 class _UserAvatar extends StatelessWidget {
+  const _UserAvatar();
+
   @override
   Widget build(BuildContext context) {
-    final user = AuthService.currentUser;
+    final user     = AuthService.currentUser;
     final photoUrl = user?.photoURL;
-    final name = user?.displayName ?? user?.email ?? 'User';
-    final initial = name.isNotEmpty ? name[0].toUpperCase() : 'U';
+    final name     = user?.displayName ?? user?.email ?? 'User';
+    final initial  = name.isNotEmpty ? name[0].toUpperCase() : 'U';
 
     return Tooltip(
-      message: 'Signed in as $name\nTap to sign out',
+      message: '$name\nTap to sign out',
       child: CircleAvatar(
-        radius: 16,
+        radius: 17,
         backgroundColor: Colors.white.withValues(alpha: 0.9),
         backgroundImage:
             photoUrl != null ? NetworkImage(photoUrl) : null,
@@ -578,10 +650,9 @@ class _UserAvatar extends StatelessWidget {
             ? Text(
                 initial,
                 style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.primary,
-                ),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.primary),
               )
             : null,
       ),
