@@ -1,5 +1,5 @@
-// File generated from google-services.json
-// Project: framework-next-c9691
+// Generated from google-services.json
+// Project: interfacescan (InterfaceScan)
 
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
@@ -20,18 +20,18 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDzNtpAm3kMDUJbKtGKkJdlaFl8HARwBdM',
-    appId: '1:794393072413:android:742542651dc1bf43bc07f4',
-    messagingSenderId: '794393072413',
-    projectId: 'framework-next-c9691',
-    storageBucket: 'framework-next-c9691.firebasestorage.app',
+    apiKey: 'AIzaSyBscNj2IrvYS18qRMogalhfFQcQQouXuew',
+    appId: '1:892218538962:android:5ba3275eb0d57acad8660b',
+    messagingSenderId: '892218538962',
+    projectId: 'interfacescan',
+    storageBucket: 'interfacescan.firebasestorage.app',
   );
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyDzNtpAm3kMDUJbKtGKkJdlaFl8HARwBdM',
-    appId: '1:794393072413:android:742542651dc1bf43bc07f4',
-    messagingSenderId: '794393072413',
-    projectId: 'framework-next-c9691',
-    storageBucket: 'framework-next-c9691.firebasestorage.app',
+    apiKey: 'AIzaSyBscNj2IrvYS18qRMogalhfFQcQQouXuew',
+    appId: '1:892218538962:android:5ba3275eb0d57acad8660b',
+    messagingSenderId: '892218538962',
+    projectId: 'interfacescan',
+    storageBucket: 'interfacescan.firebasestorage.app',
   );
 }

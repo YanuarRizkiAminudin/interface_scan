@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "794393072413",
-    "project_id": "framework-next-c9691",
-    "storage_bucket": "framework-next-c9691.firebasestorage.app"
+    "project_number": "892218538962",
+    "project_id": "interfacescan",
+    "storage_bucket": "interfacescan.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:794393072413:android:742542651dc1bf43bc07f4",
+        "mobilesdk_app_id": "1:892218538962:android:5ba3275eb0d57acad8660b",
         "android_client_info": {
           "package_name": "com.yanuar.interface_scan"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDzNtpAm3kMDUJbKtGKkJdlaFl8HARwBdM"
+          "current_key": "AIzaSyBscNj2IrvYS18qRMogalhfFQcQQouXuew"
         }
       ],
       "services": {
