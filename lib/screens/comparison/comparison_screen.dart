@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../core/constants/app_strings.dart';
 import '../../core/constants/heuristics.dart';
@@ -46,6 +47,26 @@ class _ComparisonScreenState extends State<ComparisonScreen>
     await _storage.saveSession(widget.session);
   }
 
+  void _shareFindings() {
+    final s = widget.session;
+    final accepted = s.acceptedFindings;
+    if (accepted.isEmpty) {
+      Share.share('No accepted findings yet for "${s.name}".');
+      return;
+    }
+    final buf = StringBuffer();
+    buf.writeln('📊 InterfaceScan — Before vs After');
+    buf.writeln('App : ${s.appName.isNotEmpty ? s.appName : s.name}');
+    buf.writeln('Accepted issues : ${accepted.length}');
+    buf.writeln();
+    for (var i = 0; i < accepted.length; i++) {
+      final f = accepted[i];
+      buf.writeln('${i + 1}. [H${f.heuristicId}] ${f.title}');
+      buf.writeln('   Fix : ${f.recommendation}');
+    }
+    Share.share(buf.toString(), subject: 'InterfaceScan: ${s.name}');
+  }
+
   // ── Build ─────────────────────────────────────────────────────────────────
 
   @override
@@ -53,6 +74,13 @@ class _ComparisonScreenState extends State<ComparisonScreen>
     return Scaffold(
       appBar: AppBar(
         title: const Text(AppStrings.comparison),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.share_outlined),
+            tooltip: 'Share findings',
+            onPressed: _shareFindings,
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: Colors.white,
