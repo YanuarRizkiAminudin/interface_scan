@@ -140,15 +140,11 @@ class _FindingsReviewScreenState extends State<FindingsReviewScreen> {
       appBar: AppBar(
         title: const Text(AppStrings.reviewFindings),
         actions: [
+          // Heuristics reference — icon dengan label tooltip jelas
           IconButton(
-            icon: const Icon(Icons.menu_book_outlined),
-            tooltip: AppStrings.heuristicsReference,
+            icon: const Icon(Icons.help_outline_rounded),
+            tooltip: 'Nielsen Heuristics Reference',
             onPressed: _openHeuristics,
-          ),
-          IconButton(
-            icon: const Icon(Icons.save_outlined),
-            tooltip: AppStrings.save,
-            onPressed: _saveAndFinish,
           ),
         ],
       ),
@@ -179,12 +175,51 @@ class _FindingsReviewScreenState extends State<FindingsReviewScreen> {
           // ── Finding list ─────────────────────────────────────────────────
           Expanded(
             child: filtered.isEmpty
-                ? const Center(
-                    child: Text(
-                      AppStrings.noFindings,
-                      style: TextStyle(color: AppTheme.textSecondary),
-                    ),
-                  )
+                ? _findings.isEmpty
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(32),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 72,
+                                height: 72,
+                                decoration: BoxDecoration(
+                                  color: AppTheme.primaryLight,
+                                  borderRadius: BorderRadius.circular(
+                                      AppTheme.radiusXl),
+                                ),
+                                child: const Icon(
+                                    Icons.rate_review_outlined,
+                                    size: 36,
+                                    color: AppTheme.primary),
+                              ),
+                              const SizedBox(height: 16),
+                              const Text('No findings yet',
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppTheme.textPrimary)),
+                              const SizedBox(height: 8),
+                              const Text(
+                                'Run the analysis first, or tap "Add" below to add a manual finding.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                    fontSize: 13,
+                                    color: AppTheme.textSecondary,
+                                    height: 1.5),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    : const Center(
+                        child: Text(
+                          AppStrings.noFindings,
+                          style: TextStyle(color: AppTheme.textSecondary),
+                        ),
+                      )
                 : ListView.builder(
                     padding: const EdgeInsets.only(top: 8, bottom: 100),
                     itemCount: filtered.length,
@@ -210,39 +245,50 @@ class _FindingsReviewScreenState extends State<FindingsReviewScreen> {
         ],
       ),
 
-      // ── Bottom CTAs ──────────────────────────────────────────────────────
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          // Add manual finding
-          FloatingActionButton(
-            heroTag: 'add_finding_fab',
-            onPressed: _openAddFinding,
-            backgroundColor: Colors.white,
-            foregroundColor: AppTheme.primary,
-            tooltip: AppStrings.addFindingManual,
-            child: const Icon(Icons.add),
+      // ── Bottom action bar (replaces stacked FABs) ───────────────────────
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+          child: Row(
+            children: [
+              // Add manual finding
+              OutlinedButton.icon(
+                onPressed: _openAddFinding,
+                icon: const Icon(Icons.add_rounded, size: 18),
+                label: const Text('Add'),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(0, 44),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Before vs After
+              OutlinedButton.icon(
+                onPressed: _goToComparison,
+                icon: const Icon(Icons.compare_arrows_rounded, size: 18),
+                label: const Text('Compare'),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(0, 44),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  foregroundColor: AppTheme.secondary,
+                  side: const BorderSide(color: AppTheme.secondary),
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Save — primary CTA, takes remaining space
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: _saveAndFinish,
+                  icon: const Icon(Icons.check_rounded, size: 18),
+                  label: const Text('Save'),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(0, 44),
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 10),
-          FloatingActionButton.extended(
-            heroTag: 'compare_fab',
-            onPressed: _goToComparison,
-            icon: const Icon(Icons.compare_arrows_outlined),
-            label: const Text(AppStrings.comparison),
-            backgroundColor: AppTheme.secondary,
-            foregroundColor: Colors.white,
-          ),
-          const SizedBox(height: 10),
-          FloatingActionButton.extended(
-            heroTag: 'save_fab',
-            onPressed: _saveAndFinish,
-            icon: const Icon(Icons.save_outlined),
-            label: const Text(AppStrings.saveEvaluation),
-            backgroundColor: AppTheme.primary,
-            foregroundColor: Colors.white,
-          ),
-        ],
+        ),
       ),
     );
   }

@@ -84,11 +84,14 @@ class _ComparisonScreenState extends State<ComparisonScreen>
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: Colors.white,
+          indicatorWeight: 3,
           labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
+          unselectedLabelColor: Colors.white60,
+          labelStyle: const TextStyle(
+              fontSize: 13, fontWeight: FontWeight.w600),
           tabs: const [
-            Tab(icon: Icon(Icons.compare_arrows), text: 'Side by Side'),
-            Tab(icon: Icon(Icons.list_alt_outlined), text: 'Findings'),
+            Tab(text: 'Side by Side'),
+            Tab(text: 'Findings'),
           ],
         ),
       ),

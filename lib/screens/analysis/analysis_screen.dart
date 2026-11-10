@@ -1011,29 +1011,56 @@ class _AnalyzeButton extends StatelessWidget {
       children: [
         ElevatedButton.icon(
           onPressed: enabled ? onPressed : null,
-          icon: const Icon(Icons.play_arrow_rounded),
+          icon: Icon(isDone
+              ? Icons.refresh_rounded
+              : Icons.play_arrow_rounded),
           label: Text(label),
           style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 14),
+            minimumSize: const Size(double.infinity, 52),
             disabledBackgroundColor: AppTheme.divider,
             disabledForegroundColor: AppTheme.textSecondary,
           ),
         ),
         if (!enabled && missing.isNotEmpty) ...[
-          const SizedBox(height: 6),
-          ...missing.map(
-            (msg) => Padding(
-              padding: const EdgeInsets.only(top: 2),
-              child: Row(
-                children: [
-                  const Icon(Icons.radio_button_unchecked,
-                      size: 12, color: AppTheme.textSecondary),
-                  const SizedBox(width: 6),
-                  Text(msg,
-                      style: const TextStyle(
-                          fontSize: 12, color: AppTheme.textSecondary)),
-                ],
-              ),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(
+                horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: AppTheme.warning.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+              border: Border.all(
+                  color: AppTheme.warning.withValues(alpha: 0.3)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Before you can analyze:',
+                  style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textSecondary),
+                ),
+                const SizedBox(height: 6),
+                ...missing.map(
+                  (msg) => Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.circle_outlined,
+                            size: 12,
+                            color: AppTheme.warning),
+                        const SizedBox(width: 8),
+                        Text(msg,
+                            style: const TextStyle(
+                                fontSize: 13,
+                                color: AppTheme.textPrimary)),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -1338,6 +1365,10 @@ class _OcrPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Split the aggregated text back into per-screen sections
+    final sections = result.fullText.split('\n\n---\n\n');
+    final hasText = result.fullText.trim().isNotEmpty;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Card(
@@ -1349,35 +1380,79 @@ class _OcrPanel extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.text_fields,
+                  const Icon(Icons.text_fields_rounded,
                       size: 18, color: AppTheme.primary),
                   const SizedBox(width: 8),
                   Text(
                     '${result.blockCount} text block'
-                    '${result.blockCount == 1 ? '' : 's'} detected',
+                    '${result.blockCount == 1 ? '' : 's'} detected across all screens',
                     style: const TextStyle(
                         fontSize: 14, fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
-              if (result.fullText.isNotEmpty) ...[
+              if (!hasText) ...[
+                const SizedBox(height: 8),
+                const Text(
+                  'No readable text found in any screenshot.',
+                  style: TextStyle(
+                      fontSize: 13, color: AppTheme.textSecondary),
+                ),
+              ] else ...[
                 const Divider(height: 16),
-                Text(
-                  result.fullText.length > 500
-                      ? '${result.fullText.substring(0, 500)}…'
-                      : result.fullText,
-                  style: const TextStyle(
-                      fontSize: 13,
-                      color: AppTheme.textSecondary,
-                      height: 1.5),
-                ),
-              ] else
-                const Padding(
-                  padding: EdgeInsets.only(top: 8),
-                  child: Text('No text detected.',
-                      style: TextStyle(
-                          fontSize: 13, color: AppTheme.textSecondary)),
-                ),
+                // Show text per screen with clear label
+                ...sections.asMap().entries.map((e) {
+                  final idx = e.key + 1;
+                  final text = e.value.trim();
+                  if (text.isEmpty) return const SizedBox.shrink();
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primaryLight,
+                              borderRadius: BorderRadius.circular(
+                                  AppTheme.radiusFull),
+                            ),
+                            child: Text(
+                              'Screen $idx',
+                              style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppTheme.primary),
+                            ),
+                          ),
+                        ]),
+                        const SizedBox(height: 4),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: AppTheme.surface,
+                            borderRadius: BorderRadius.circular(
+                                AppTheme.radiusSm),
+                          ),
+                          child: Text(
+                            text.length > 200
+                                ? '${text.substring(0, 200)}…'
+                                : text,
+                            style: const TextStyle(
+                                fontSize: 13,
+                                color: AppTheme.textPrimary,
+                                height: 1.5,
+                                fontFamily: 'monospace'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ],
             ],
           ),
         ),
