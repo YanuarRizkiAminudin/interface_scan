@@ -45,9 +45,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  /// Returns true if the key looks valid (starts with AIza, exactly 39 chars).
+  /// Returns true if the key looks valid.
+  /// Accepts both old format (AIza...) and new Google AI Studio format (AQ...).
   bool _isKeyFormatValid(String key) =>
-      key.startsWith('AIza') && key.length == 39;
+      key.length >= 20 && (key.startsWith('AIza') || key.startsWith('AQ.'));
 
   Future<void> _save() async {
     final key = _apiKeyCtrl.text.trim();

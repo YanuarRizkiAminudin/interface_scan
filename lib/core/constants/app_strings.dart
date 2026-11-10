@@ -167,7 +167,7 @@ class AppStrings {
       'Get a free key at aistudio.google.com.';
   static const String apiKeySaved = 'API key saved.';
   static const String apiKeyInvalid =
-      'Key format looks invalid. Gemini keys start with "AIza" and are 39 characters.';
+      'Key format looks invalid. Please check your Gemini API key.';
   static const String testConnection = 'Test Connection';
   static const String testingConnection = 'Testing…';
   static const String connectionSuccess = 'Connection successful.';
