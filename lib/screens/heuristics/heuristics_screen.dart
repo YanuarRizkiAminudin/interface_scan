@@ -1,11 +1,14 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import '../../core/constants/app_strings.dart';
 import '../../core/constants/heuristics.dart';
 import '../../core/theme/app_theme.dart';
 
-/// Reference screen showing all 10 Nielsen Usability Heuristics
-/// with their full name, description, and a practical example.
+/// Reference screen showing all 10 Nielsen Usability Heuristics.
+/// Order is RANDOMIZED every time the screen opens so users learn
+/// the content, not the position.
 class HeuristicsScreen extends StatefulWidget {
   /// If non-null, the screen opens with that heuristic expanded.
   final int? highlightId;
@@ -18,23 +21,35 @@ class HeuristicsScreen extends StatefulWidget {
 
 class _HeuristicsScreenState extends State<HeuristicsScreen> {
   final _scrollController = ScrollController();
-  final List<GlobalKey> _keys =
-      List.generate(10, (_) => GlobalKey());
+
+  /// Shuffled list — randomized once when the screen is created.
+  late final List<NielsenHeuristic> _shuffled;
+
+  /// Map from heuristic id → its GlobalKey in the shuffled list.
+  final Map<int, GlobalKey> _keyById = {};
 
   @override
   void initState() {
     super.initState();
+
+    // Shuffle a copy of the list; original kNielsenHeuristics is untouched.
+    _shuffled = List.of(kNielsenHeuristics)..shuffle(Random());
+
+    // Create one GlobalKey per heuristic, keyed by id.
+    for (final h in _shuffled) {
+      _keyById[h.id] = GlobalKey();
+    }
+
+    // If a specific heuristic should be highlighted, scroll to it.
     if (widget.highlightId != null) {
-      // Scroll to the highlighted heuristic after the first frame.
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        final idx = widget.highlightId! - 1;
-        if (idx >= 0 && idx < 10) {
-          final ctx = _keys[idx].currentContext;
-          if (ctx != null) {
-            Scrollable.ensureVisible(ctx,
-                duration: const Duration(milliseconds: 400),
-                curve: Curves.easeInOut);
-          }
+        final key = _keyById[widget.highlightId!];
+        if (key?.currentContext != null) {
+          Scrollable.ensureVisible(
+            key!.currentContext!,
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.easeInOut,
+          );
         }
       });
     }
@@ -70,22 +85,54 @@ class _HeuristicsScreenState extends State<HeuristicsScreen> {
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-            child: Text(
-              AppStrings.heuristicsIntro,
-              style: const TextStyle(
-                fontSize: 13,
-                color: AppTheme.textSecondary,
-                height: 1.5,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  AppStrings.heuristicsIntro,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppTheme.textSecondary,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryLight,
+                    borderRadius:
+                        BorderRadius.circular(AppTheme.radiusSm),
+                  ),
+                  child: Row(
+                    children: const [
+                      Icon(Icons.shuffle_rounded,
+                          size: 14, color: AppTheme.primary),
+                      SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          'Order is shuffled each visit — learn the content, not the position.',
+                          style: TextStyle(
+                              fontSize: 12,
+                              color: AppTheme.primary,
+                              fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
           const Divider(height: 1),
 
-          // ── Heuristic list ───────────────────────────────────────────
-          ...kNielsenHeuristics.map((h) {
+          // ── Heuristic list (randomized order) ───────────────────────
+          // Order changes each visit so users learn content, not position.
+          ..._shuffled.map((h) {
             final highlighted = widget.highlightId == h.id;
             return _HeuristicCard(
-              key: _keys[h.id - 1],
+              key: _keyById[h.id],
               heuristic: h,
               highlighted: highlighted,
               initiallyExpanded: highlighted,
