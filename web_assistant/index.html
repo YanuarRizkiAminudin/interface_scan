@@ -6,396 +6,200 @@
 <title>Presentation Assistant</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
   :root {
-    --blue: #1A73E8;
-    --green: #34A853;
-    --red: #D93025;
-    --bg: #f1f3f4;
-    --card: #ffffff;
-    --text: #202124;
-    --sub: #5F6368;
-    --border: #E8EAED;
+    --blue: #1A73E8; --green: #34A853; --red: #D93025;
+    --bg: #f1f3f4; --card: #fff; --text: #202124;
+    --sub: #5F6368; --border: #E8EAED;
   }
-
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: var(--bg);
-    min-height: 100vh;
-    padding: 16px;
-    transition: background 0.3s, color 0.3s;
+    background: var(--bg); min-height: 100vh; padding: 16px;
+    transition: background 0.3s;
   }
+  body.dark { background: #0d0d0d; color: #f0f0f0; }
+  body.dark .card, body.dark #answerBox, body.dark #questionBox, body.dark .history-item {
+    background: #1a1a1a; border-color: #333; color: #f0f0f0;
+  }
+  body.dark #answerText { font-size: 28px; line-height: 1.7; color: #fff; }
+  body.dark #questionText, body.dark #status { color: #aaa; }
+  body.dark .top-bar .name { color: #f0f0f0; }
+  body.dark .history-item .hq { color: #888; }
+  body.dark .history-item .ha { color: #ddd; }
 
-  /* ── PRESENTATION MODE ── */
-  body.present-mode {
-    background: #0d0d0d;
-    color: #f0f0f0;
-  }
-  body.present-mode .card,
-  body.present-mode #answerBox,
-  body.present-mode #questionBox,
-  body.present-mode .history-item {
-    background: #1a1a1a;
-    border-color: #333;
-    color: #f0f0f0;
-  }
-  body.present-mode #answerText {
-    font-size: 28px;
-    line-height: 1.7;
-    color: #ffffff;
-  }
-  body.present-mode #questionText { color: #aaa; }
-  body.present-mode label,
-  body.present-mode .card h2 { color: #aaa; }
-  body.present-mode input,
-  body.present-mode textarea {
-    background: #222;
-    border-color: #444;
-    color: #f0f0f0;
-  }
-  body.present-mode #status { color: #aaa; }
-  body.present-mode .history-item .hq { color: #888; }
-  body.present-mode .history-item .ha { color: #ddd; }
-  body.present-mode .top-bar .name { color: #f0f0f0; }
-
-  /* ── Setup screen ── */
-  #setup { max-width: 480px; margin: 0 auto; }
-
-  .logo {
-    text-align: center;
-    padding: 32px 0 24px;
-  }
+  #setup { max-width: 460px; margin: 0 auto; }
+  .logo { text-align: center; padding: 32px 0 24px; }
   .logo-icon {
-    width: 72px; height: 72px;
-    background: var(--blue);
-    border-radius: 20px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 36px;
+    width: 72px; height: 72px; background: var(--blue);
+    border-radius: 20px; display: inline-flex; align-items: center;
+    justify-content: center; font-size: 36px;
     box-shadow: 0 8px 24px rgba(26,115,232,0.3);
   }
-  .logo h1 {
-    margin-top: 12px;
-    font-size: 22px;
-    font-weight: 800;
-    color: var(--text);
-  }
-  .logo p { font-size: 14px; color: var(--sub); margin-top: 4px; }
+  .logo h1 { margin-top: 12px; font-size: 22px; font-weight: 800; color: var(--text); }
+  .logo p  { font-size: 14px; color: var(--sub); margin-top: 4px; }
 
   .card {
-    background: var(--card);
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 12px;
-    border: 1px solid var(--border);
+    background: var(--card); border-radius: 12px; padding: 20px;
+    margin-bottom: 12px; border: 1px solid var(--border);
   }
   .card h2 {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--sub);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 12px;
+    font-size: 13px; font-weight: 700; color: var(--sub);
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px;
   }
-
-  label {
-    display: block;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--sub);
-    margin-bottom: 4px;
-    margin-top: 12px;
-  }
-  label:first-of-type { margin-top: 0; }
-
-  input, textarea {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 15px;
-    color: var(--text);
-    background: var(--card);
-    outline: none;
+  label { display: block; font-size: 13px; font-weight: 600; color: var(--sub); margin-bottom: 4px; }
+  input[type="password"], input[type="text"] {
+    width: 100%; padding: 12px; border: 1px solid var(--border);
+    border-radius: 8px; font-size: 15px; color: var(--text);
+    background: var(--card); outline: none; font-family: inherit;
     transition: border-color 0.2s;
-    font-family: inherit;
-    resize: vertical;
   }
-  input:focus, textarea:focus {
-    border-color: var(--blue);
-    box-shadow: 0 0 0 2px rgba(26,115,232,0.15);
-  }
+  input:focus { border-color: var(--blue); box-shadow: 0 0 0 2px rgba(26,115,232,0.15); }
   input[type="password"] { letter-spacing: 2px; }
 
+  /* Upload zone */
+  .upload-zone {
+    border: 2px dashed var(--border); border-radius: 12px;
+    padding: 28px 16px; text-align: center; cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .upload-zone:hover { border-color: var(--blue); background: #f0f6ff; }
+  .upload-zone.done  { border-color: var(--green); background: #f0faf3; }
+  .upload-zone .uz-icon { font-size: 32px; margin-bottom: 6px; }
+  .upload-zone .uz-title { font-size: 15px; font-weight: 700; color: var(--blue); }
+  .upload-zone.done .uz-title { color: var(--green); }
+  .upload-zone .uz-sub { font-size: 12px; color: #9AA0A6; margin-top: 4px; }
+
   .btn-primary {
-    display: block;
-    width: 100%;
-    padding: 16px;
-    background: var(--blue);
-    color: #fff;
-    border: none;
-    border-radius: 10px;
-    font-size: 16px;
-    font-weight: 700;
-    cursor: pointer;
-    margin-top: 16px;
-    transition: background 0.2s;
+    display: block; width: 100%; padding: 16px;
+    background: var(--blue); color: #fff; border: none;
+    border-radius: 10px; font-size: 16px; font-weight: 700;
+    cursor: pointer; margin-top: 4px; transition: background 0.2s;
   }
   .btn-primary:hover { background: #1557B0; }
   .btn-primary:disabled { background: var(--border); color: #9AA0A6; cursor: not-allowed; }
 
   /* ── Assistant screen ── */
-  #assistant { display: none; max-width: 480px; margin: 0 auto; }
-
+  #assistant { display: none; max-width: 460px; margin: 0 auto; }
   .top-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 0 16px;
+    display: flex; align-items: center;
+    justify-content: space-between; padding: 8px 0 16px;
   }
   .top-bar .name { font-size: 16px; font-weight: 700; color: var(--text); }
-  .top-bar .actions { display: flex; gap: 8px; align-items: center; }
+  .top-bar .actions { display: flex; gap: 8px; }
   .icon-btn {
-    background: none;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 6px 10px;
-    font-size: 14px;
-    cursor: pointer;
-    color: var(--sub);
+    background: none; border: 1px solid var(--border);
+    border-radius: 8px; padding: 6px 10px; font-size: 14px;
+    cursor: pointer; color: var(--sub);
   }
-  .icon-btn.active {
-    background: #0d0d0d;
-    color: #fff;
-    border-color: #0d0d0d;
-  }
-  .edit-btn {
-    font-size: 13px;
-    color: var(--blue);
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-weight: 600;
-  }
+  .icon-btn.on { background: #0d0d0d; color: #fff; border-color: #0d0d0d; }
+  .edit-btn { font-size: 13px; color: var(--blue); background: none; border: none; cursor: pointer; font-weight: 600; }
 
-  /* Auto-speak toggle */
   .toggle-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 12px 14px;
-    margin-bottom: 10px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 14px; margin-bottom: 10px;
   }
   .toggle-row span { font-size: 14px; color: var(--sub); }
-  .toggle {
-    position: relative;
-    width: 44px; height: 24px;
-  }
+  .toggle { position: relative; width: 44px; height: 24px; }
   .toggle input { opacity: 0; width: 0; height: 0; }
   .slider {
-    position: absolute;
-    cursor: pointer;
-    inset: 0;
-    background: #ccc;
-    border-radius: 24px;
-    transition: 0.3s;
+    position: absolute; cursor: pointer; inset: 0;
+    background: #ccc; border-radius: 24px; transition: 0.3s;
   }
   .slider:before {
-    content: '';
-    position: absolute;
-    height: 18px; width: 18px;
-    left: 3px; bottom: 3px;
-    background: white;
-    border-radius: 50%;
-    transition: 0.3s;
+    content: ''; position: absolute; height: 18px; width: 18px;
+    left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s;
   }
   input:checked + .slider { background: var(--green); }
   input:checked + .slider:before { transform: translateX(20px); }
 
-  /* Record button */
   #recordBtn {
-    width: 100%;
-    height: 120px;
-    border-radius: 20px;
-    border: none;
-    cursor: pointer;
-    font-size: 18px;
-    font-weight: 700;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    transition: all 0.2s;
-    background: var(--blue);
-    color: #fff;
+    width: 100%; height: 120px; border-radius: 20px; border: none;
+    cursor: pointer; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 8px;
+    background: var(--blue); color: #fff;
     box-shadow: 0 4px 16px rgba(26,115,232,0.35);
+    font-weight: 700; transition: all 0.2s;
     -webkit-tap-highlight-color: transparent;
   }
   #recordBtn.recording {
-    background: var(--red);
-    box-shadow: 0 4px 16px rgba(217,48,37,0.35);
+    background: var(--red); box-shadow: 0 4px 16px rgba(217,48,37,0.35);
     animation: pulse 1.2s infinite;
   }
-  #recordBtn.loading {
-    background: #F9AB00;
-    box-shadow: 0 4px 16px rgba(249,171,0,0.35);
-  }
+  #recordBtn.loading { background: #F9AB00; box-shadow: 0 4px 16px rgba(249,171,0,0.35); }
   #recordBtn .mic-icon { font-size: 36px; }
   #recordBtn .label { font-size: 15px; }
+  @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.03)} }
 
-  @keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.03); }
-  }
+  #status { text-align: center; font-size: 14px; color: var(--sub); margin: 12px 0; min-height: 20px; }
 
-  #status {
-    text-align: center;
-    font-size: 14px;
-    color: var(--sub);
-    margin: 12px 0;
-    min-height: 20px;
-  }
-
-  /* Question bubble */
   #questionBox {
-    display: none;
-    background: #E8F0FE;
-    border-radius: 12px;
-    padding: 14px 16px;
-    margin-bottom: 10px;
+    display: none; background: #E8F0FE; border-radius: 12px;
+    padding: 14px 16px; margin-bottom: 10px;
   }
   #questionBox .qlabel {
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--blue);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 6px;
+    font-size: 11px; font-weight: 700; color: var(--blue);
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;
   }
   #questionText { font-size: 15px; color: var(--text); line-height: 1.5; }
 
-  /* Answer box */
   #answerBox {
-    display: none;
-    background: var(--card);
-    border-radius: 12px;
-    border: 1px solid var(--border);
-    padding: 16px;
-    margin-bottom: 10px;
+    display: none; background: var(--card); border-radius: 12px;
+    border: 1px solid var(--border); padding: 16px; margin-bottom: 10px;
   }
   #answerBox .alabel {
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--green);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 8px;
+    font-size: 11px; font-weight: 700; color: var(--green);
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;
   }
-  #answerText {
-    font-size: 20px;
-    font-weight: 500;
-    color: var(--text);
-    line-height: 1.6;
-    transition: font-size 0.3s;
-  }
+  #answerText { font-size: 20px; font-weight: 500; color: var(--text); line-height: 1.6; }
 
-  /* Speak / Stop buttons */
-  .speak-row {
-    display: none;
-    gap: 8px;
-    margin-bottom: 10px;
-  }
-  .speak-row.visible { display: flex; }
+  .speak-row { display: none; gap: 8px; margin-bottom: 10px; }
+  .speak-row.show { display: flex; }
   #speakBtn {
-    flex: 1;
-    padding: 14px;
-    background: var(--green);
-    color: #fff;
-    border: none;
-    border-radius: 10px;
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
+    flex: 1; padding: 14px; background: var(--green); color: #fff;
+    border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer;
   }
   #stopBtn {
-    padding: 14px 18px;
-    background: #fff;
-    color: var(--red);
-    border: 1.5px solid var(--red);
-    border-radius: 10px;
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
+    padding: 14px 18px; background: #fff; color: var(--red);
+    border: 1.5px solid var(--red); border-radius: 10px;
+    font-size: 15px; font-weight: 700; cursor: pointer;
   }
 
-  /* Spinner */
   .spinner {
-    display: inline-block;
-    width: 16px; height: 16px;
-    border: 2.5px solid rgba(255,255,255,0.4);
-    border-top-color: #fff;
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-    vertical-align: middle;
-    margin-right: 6px;
+    display: inline-block; width: 16px; height: 16px;
+    border: 2.5px solid rgba(255,255,255,0.4); border-top-color: #fff;
+    border-radius: 50%; animation: spin 0.7s linear infinite;
+    vertical-align: middle; margin-right: 6px;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* History */
   #history { margin-top: 8px; }
   #history h3 {
-    font-size: 12px;
-    font-weight: 700;
-    color: #9AA0A6;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 8px;
+    font-size: 12px; font-weight: 700; color: #9AA0A6;
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;
   }
   .history-item {
-    background: var(--card);
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    padding: 12px 14px;
-    margin-bottom: 8px;
-    cursor: pointer;
+    background: var(--card); border-radius: 10px; border: 1px solid var(--border);
+    padding: 12px 14px; margin-bottom: 8px; cursor: pointer;
   }
   .history-item .hq {
-    font-size: 13px;
-    color: var(--sub);
-    margin-bottom: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    font-size: 13px; color: var(--sub); margin-bottom: 4px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .history-item .ha {
-    font-size: 14px;
-    color: var(--text);
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    font-size: 14px; color: var(--text);
+    display: -webkit-box; -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical; overflow: hidden;
   }
   .clear-btn {
-    width: 100%;
-    padding: 10px;
-    background: none;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 13px;
-    color: #9AA0A6;
-    cursor: pointer;
-    margin-top: 4px;
+    width: 100%; padding: 10px; background: none;
+    border: 1px solid var(--border); border-radius: 8px;
+    font-size: 13px; color: #9AA0A6; cursor: pointer; margin-top: 4px;
   }
 </style>
 </head>
 <body>
 
-<!-- ══ SETUP SCREEN ══ -->
+<!-- ══ SETUP ══ -->
 <div id="setup">
   <div class="logo">
     <div class="logo-icon">🎤</div>
@@ -403,62 +207,44 @@
     <p>AI-powered Q&amp;A for introductions</p>
   </div>
 
+  <!-- API Key -->
   <div class="card">
     <h2>🔑 Gemini API Key</h2>
     <label>Your API Key</label>
-    <input type="password" id="apiKey" placeholder="AIzaSy… or AQ.Ab8…"
-           autocomplete="off" spellcheck="false">
+    <input type="password" id="apiKey" placeholder="AIzaSy… or AQ.Ab8…" autocomplete="off" spellcheck="false">
     <small style="font-size:12px;color:#9AA0A6;display:block;margin-top:6px;">
-      Get a free key at <a href="https://aistudio.google.com/apikey" target="_blank"
-      style="color:#1A73E8;">aistudio.google.com/apikey</a>
+      Free key at <a href="https://aistudio.google.com/apikey" target="_blank" style="color:#1A73E8;">aistudio.google.com/apikey</a>
     </small>
   </div>
 
+  <!-- Upload background file -->
   <div class="card">
-    <h2>👤 Your Background</h2>
-
-    <!-- Upload .txt file -->
-    <div id="uploadZone" onclick="document.getElementById('fileInput').click()"
-      style="border:2px dashed #E8EAED;border-radius:10px;padding:16px;text-align:center;cursor:pointer;margin-bottom:16px;transition:border-color 0.2s;">
-      <div style="font-size:24px;margin-bottom:4px;">📄</div>
-      <div style="font-size:14px;font-weight:600;color:#1A73E8;">Upload my_background.txt</div>
-      <div style="font-size:12px;color:#9AA0A6;margin-top:2px;">Tap to select file — fields fill automatically</div>
+    <h2>📄 Background Data</h2>
+    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+      <div class="uz-icon">📄</div>
+      <div class="uz-title" id="uzTitle">Upload my_background.txt</div>
+      <div class="uz-sub" id="uzSub">Tap to select your background file</div>
     </div>
     <input type="file" id="fileInput" accept=".txt,.md" style="display:none" onchange="loadFile(event)">
-
-    <label>Full Name</label>
-    <input type="text" id="bgName" placeholder="e.g. Yanuar Rizki Aminudin">
-    <label>University &amp; Country</label>
-    <input type="text" id="bgUniversity" placeholder="e.g. State Polytechnic of Malang, Indonesia">
-    <label>Major / Department</label>
-    <input type="text" id="bgMajor" placeholder="e.g. Information Technology">
-    <label>Exchange Program</label>
-    <input type="text" id="bgWhy" placeholder="e.g. Exchange student at National Formosa University, Taiwan">
-    <label>Current Project / Research</label>
-    <input type="text" id="bgProject" placeholder="e.g. InterfaceScan — AI-Assisted UI Evaluation App">
-    <label>Supervisor / Advisor (optional)</label>
-    <input type="text" id="bgSupervisor" placeholder="e.g. supervised by Dr. ...">
-    <label>Interests / Hobbies (optional)</label>
-    <input type="text" id="bgHobbies" placeholder="e.g. Mobile development, UI/UX design">
-    <label>Anything else to mention</label>
-    <textarea id="bgExtra" rows="3"
-      placeholder="e.g. I am excited to learn from professors and collaborate on research here..."></textarea>
+    <p style="font-size:12px;color:#9AA0A6;text-align:center;margin-top:10px;">
+      Don't have the file? Download template:
+      <a href="my_background.txt" download style="color:#1A73E8;">my_background.txt</a>
+    </p>
   </div>
 
-  <button class="btn-primary" onclick="startAssistant()">Start Assistant →</button>
+  <button class="btn-primary" id="startBtn" onclick="startAssistant()">Start Assistant →</button>
 </div>
 
-<!-- ══ ASSISTANT SCREEN ══ -->
+<!-- ══ ASSISTANT ══ -->
 <div id="assistant">
   <div class="top-bar">
     <span class="name" id="displayName">Hi 👋</span>
     <div class="actions">
-      <button class="icon-btn" id="darkBtn" onclick="toggleDark()" title="Presentation mode">🌙</button>
+      <button class="icon-btn" id="darkBtn" onclick="toggleDark()">🌙</button>
       <button class="edit-btn" onclick="goBack()">✏️ Edit</button>
     </div>
   </div>
 
-  <!-- Auto-speak toggle -->
   <div class="toggle-row">
     <span>🔊 Auto-read answer aloud</span>
     <label class="toggle">
@@ -467,7 +253,6 @@
     </label>
   </div>
 
-  <!-- Record button -->
   <button id="recordBtn" onclick="toggleRecord()">
     <span class="mic-icon">🎤</span>
     <span class="label" id="recordLabel">Tap to record question</span>
@@ -475,127 +260,64 @@
 
   <div id="status">Ready — tap when the professor starts speaking</div>
 
-  <!-- Question -->
   <div id="questionBox">
     <div class="qlabel">📢 Question heard:</div>
     <div id="questionText"></div>
   </div>
 
-  <!-- Answer -->
   <div id="answerBox">
     <div class="alabel">✅ Your answer:</div>
     <div id="answerText"></div>
   </div>
 
-  <!-- Speak / Stop row -->
   <div class="speak-row" id="speakRow">
     <button id="speakBtn" onclick="speakAnswer()">🔊 Read aloud</button>
     <button id="stopBtn" onclick="stopSpeaking()">⏹ Stop</button>
   </div>
 
-  <!-- History -->
   <div id="history"></div>
 </div>
 
 <script>
-// ══ Load .txt file into fields ══
+let apiKey = '', background = '', userName = '';
+let recognition = null, isRecording = false, currentAnswer = '';
+const historyItems = [];
+
+// ══ Load file ══
 function loadFile(event) {
   const file = event.target.files[0];
   if (!file) return;
-
   const reader = new FileReader();
   reader.onload = (e) => {
     const text = e.target.result;
+    background = text; // use full file as background context
 
-    // Parse key: value lines
-    const get = (key) => {
-      const regex = new RegExp(`^${key}\\s*:\\s*(.+)`, 'im');
-      const match = text.match(regex);
-      return match ? match[1].trim() : '';
-    };
+    // Try to extract name for greeting
+    const nameMatch = text.match(/^FULL NAME\s*:\s*(.+)/im);
+    userName = nameMatch ? nameMatch[1].trim() : 'You';
 
-    // Fill individual fields
-    const name = get('FULL NAME');
-    if (name) document.getElementById('bgName').value = name;
-
-    const uni = get('UNIVERSITY');
-    if (uni) document.getElementById('bgUniversity').value = uni;
-
-    const major = get('MAJOR');
-    if (major) document.getElementById('bgMajor').value = major;
-
-    const why = get('EXCHANGE PROGRAM');
-    if (why) document.getElementById('bgWhy').value = why;
-
-    const project = get('CURRENT PROJECT');
-    if (project) document.getElementById('bgProject').value = project;
-
-    const supervisor = get('SUPERVISOR');
-    if (supervisor) document.getElementById('bgSupervisor').value = supervisor;
-
-    const hobbies = get('HOBBIES');
-    if (hobbies) document.getElementById('bgHobbies').value = hobbies;
-
-    // Put full text into Extra for complete context
-    document.getElementById('bgExtra').value = text;
+    // Save
+    localStorage.setItem('pa_apiKey',     document.getElementById('apiKey').value.trim());
+    localStorage.setItem('pa_background', background);
+    localStorage.setItem('pa_name',       userName);
 
     // Visual feedback
     const zone = document.getElementById('uploadZone');
-    zone.style.borderColor = '#34A853';
-    zone.innerHTML = `<div style="font-size:24px;margin-bottom:4px;">✅</div>
-      <div style="font-size:14px;font-weight:600;color:#34A853;">${file.name} loaded!</div>
-      <div style="font-size:12px;color:#9AA0A6;margin-top:2px;">All fields filled from file</div>`;
+    zone.classList.add('done');
+    document.getElementById('uzTitle').textContent = '✅ ' + file.name;
+    document.getElementById('uzSub').textContent   = 'Background loaded — ready to start!';
   };
   reader.readAsText(file);
 }
 
-// ══ State ══
-let apiKey       = '';
-let background   = '';
-let recognition  = null;
-let isRecording  = false;
-let currentAnswer= '';
-const historyItems = [];
-
-// ══ Setup ══
+// ══ Start ══
 function startAssistant() {
   apiKey = document.getElementById('apiKey').value.trim();
-  if (!apiKey) { alert('Please enter your Gemini API key.'); return; }
+  if (!apiKey)     { alert('Please enter your Gemini API key.'); return; }
+  if (!background) { alert('Please upload your background .txt file first.'); return; }
 
-  const name       = document.getElementById('bgName').value.trim();
-  const university = document.getElementById('bgUniversity').value.trim();
-  const major      = document.getElementById('bgMajor').value.trim();
-  const why        = document.getElementById('bgWhy').value.trim();
-  const project    = document.getElementById('bgProject').value.trim();
-  const supervisor = document.getElementById('bgSupervisor').value.trim();
-  const hobbies    = document.getElementById('bgHobbies').value.trim();
-  const extra      = document.getElementById('bgExtra').value.trim();
-
-  if (!name) { alert('Please enter your name.'); return; }
-
-  background = [
-    `Name: ${name}`,
-    university  ? `University: ${university}`                      : null,
-    major       ? `Major/Department: ${major}`                     : null,
-    why         ? `Exchange program: ${why}`                       : null,
-    project     ? `Current project/research: ${project}`          : null,
-    supervisor  ? `Supervised by: ${supervisor}`                   : null,
-    hobbies     ? `Interests/Hobbies: ${hobbies}`                  : null,
-    extra       ? `Additional info: ${extra}`                      : null,
-  ].filter(Boolean).join('\n');
-
-  // Persist to localStorage
-  localStorage.setItem('pa_apiKey',     apiKey);
-  localStorage.setItem('pa_name',       name);
-  localStorage.setItem('pa_university', university);
-  localStorage.setItem('pa_major',      major);
-  localStorage.setItem('pa_why',        why);
-  localStorage.setItem('pa_project',    project);
-  localStorage.setItem('pa_supervisor', supervisor);
-  localStorage.setItem('pa_hobbies',    hobbies);
-  localStorage.setItem('pa_extra',      extra);
-
-  document.getElementById('displayName').textContent = `Hi, ${name.split(' ')[0]} 👋`;
+  localStorage.setItem('pa_apiKey', apiKey);
+  document.getElementById('displayName').textContent = `Hi, ${userName.split(' ')[0]} 👋`;
   document.getElementById('setup').style.display    = 'none';
   document.getElementById('assistant').style.display= 'block';
   initSpeechRecognition();
@@ -606,35 +328,33 @@ function goBack() {
   document.getElementById('setup').style.display     = 'block';
 }
 
-// ══ Load saved data on page open ══
+// ══ Restore from localStorage ══
 window.addEventListener('load', () => {
-  const load = id => localStorage.getItem(id) || '';
-  const savedKey = load('pa_apiKey');
+  const savedKey = localStorage.getItem('pa_apiKey')     || '';
+  const savedBg  = localStorage.getItem('pa_background') || '';
+  const savedName= localStorage.getItem('pa_name')       || '';
 
-  if (savedKey) {
-    document.getElementById('apiKey').value       = savedKey;
-    document.getElementById('bgName').value       = load('pa_name');
-    document.getElementById('bgUniversity').value = load('pa_university');
-    document.getElementById('bgMajor').value      = load('pa_major');
-    document.getElementById('bgWhy').value        = load('pa_why');
-    document.getElementById('bgProject').value    = load('pa_project');
-    document.getElementById('bgSupervisor').value = load('pa_supervisor');
-    document.getElementById('bgHobbies').value    = load('pa_hobbies');
-    document.getElementById('bgExtra').value      = load('pa_extra');
+  if (savedKey) document.getElementById('apiKey').value = savedKey;
+
+  if (savedBg) {
+    background = savedBg;
+    userName   = savedName || 'You';
+    const zone = document.getElementById('uploadZone');
+    zone.classList.add('done');
+    document.getElementById('uzTitle').textContent = '✅ Background loaded from last session';
+    document.getElementById('uzSub').textContent   = 'Tap to upload a new file, or press Start';
   }
 
-  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-    document.getElementById('status').textContent =
-      '⚠️ Speech recognition not supported — use Chrome on Android.';
-  }
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window))
+    document.getElementById('status').textContent = '⚠️ Use Chrome for speech recognition.';
 });
 
-// ══ Presentation / Dark mode ══
+// ══ Dark / Presentation mode ══
 function toggleDark() {
-  document.body.classList.toggle('present-mode');
+  document.body.classList.toggle('dark');
   const btn = document.getElementById('darkBtn');
-  btn.classList.toggle('active');
-  btn.textContent = document.body.classList.contains('present-mode') ? '☀️' : '🌙';
+  btn.classList.toggle('on');
+  btn.textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
 }
 
 // ══ Speech Recognition ══
@@ -647,14 +367,14 @@ function initSpeechRecognition() {
   recognition.interimResults = true;
   recognition.lang           = 'en-US';
 
+  let finalTranscript = '';
+
   recognition.onstart = () => {
     isRecording = true;
     document.getElementById('recordBtn').classList.add('recording');
     document.getElementById('recordLabel').textContent = 'Listening… tap to stop';
     setStatus('🔴 Recording…');
   };
-
-  let finalTranscript = '';
 
   recognition.onresult = (e) => {
     let interim = '';
@@ -665,20 +385,13 @@ function initSpeechRecognition() {
     }
     const display = finalTranscript || interim;
     if (display) {
-      document.getElementById('questionText').textContent = display;
+      document.getElementById('questionText').textContent  = display;
       document.getElementById('questionBox').style.display = 'block';
     }
   };
 
-  recognition.onerror = (e) => {
-    stopRecordingUI();
-    setStatus('Error: ' + e.error + '. Try again.');
-  };
-
-  recognition.onend = () => {
-    stopRecordingUI();
-    if (finalTranscript.trim()) askGemini(finalTranscript.trim());
-  };
+  recognition.onerror = (e) => { stopRecordingUI(); setStatus('Error: ' + e.error + '. Try again.'); };
+  recognition.onend   = () => { stopRecordingUI(); if (finalTranscript.trim()) askGemini(finalTranscript.trim()); };
 }
 
 function toggleRecord() {
@@ -686,9 +399,8 @@ function toggleRecord() {
   if (isRecording) {
     recognition.stop();
   } else {
-    // Reset UI
     document.getElementById('answerBox').style.display   = 'none';
-    document.getElementById('speakRow').classList.remove('visible');
+    document.getElementById('speakRow').classList.remove('show');
     document.getElementById('questionBox').style.display = 'none';
     document.getElementById('questionText').textContent  = '';
     document.getElementById('answerText').textContent    = '';
@@ -700,112 +412,81 @@ function toggleRecord() {
 
 function stopRecordingUI() {
   isRecording = false;
-  const btn = document.getElementById('recordBtn');
-  btn.classList.remove('recording');
-  btn.classList.remove('loading');
+  document.getElementById('recordBtn').classList.remove('recording', 'loading');
   document.getElementById('recordLabel').textContent = 'Tap to record question';
 }
 
-// ══ Gemini API ══
+// ══ Gemini ══
 async function askGemini(question) {
   setStatus('<span class="spinner"></span> Generating answer…');
   document.getElementById('recordBtn').classList.add('loading');
   document.getElementById('recordLabel').textContent = 'Thinking…';
-  document.getElementById('answerBox').style.display   = 'none';
-  document.getElementById('speakRow').classList.remove('visible');
+  document.getElementById('answerBox').style.display = 'none';
+  document.getElementById('speakRow').classList.remove('show');
 
   const prompt = `You are helping someone answer a professor's question during a self-introduction presentation.
-Answer naturally in English, speaking AS the person. Keep it short (2–4 sentences), confident, and conversational.
+Answer naturally in English, speaking AS the person described below.
+Keep it SHORT (2-4 sentences), confident, and conversational — like a real person talking, not a formal essay.
 Do NOT start with "I would say", "Sure", "Certainly", or any filler. Jump straight into the answer.
-Use natural spoken English — the way a real person talks, not a formal essay.
 
-About the person:
+Here is everything about the person:
+---
 ${background}
+---
 
 Professor's question: "${question}"
 
-Answer (natural spoken English):`;
+Answer naturally in spoken English:`;
 
-  // Try models in order — gemini-1.5-flash is current stable
-  const models = [
-    'gemini-1.5-flash',
-    'gemini-1.5-flash-latest',
-    'gemini-2.0-flash-lite',
-  ];
-
-  let answer = '';
-  let lastErr = '';
+  const models = ['gemini-1.5-flash', 'gemini-1.5-flash-latest', 'gemini-2.0-flash-lite'];
+  let answer = '', lastErr = '';
 
   for (const model of models) {
     try {
       const res = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
         {
-          method : 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body   : JSON.stringify({
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }],
             generationConfig: { temperature: 0.75, maxOutputTokens: 220 }
           })
         }
       );
-
-      if (!res.ok) {
-        const err = await res.json();
-        lastErr = err.error?.message || `HTTP ${res.status}`;
-        continue; // try next model
-      }
-
+      if (!res.ok) { const e = await res.json(); lastErr = e.error?.message || `HTTP ${res.status}`; continue; }
       const data = await res.json();
       answer = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
       if (answer) break;
-
-    } catch (e) {
-      lastErr = e.message;
-    }
+    } catch(e) { lastErr = e.message; }
   }
 
   stopRecordingUI();
-
-  if (!answer) {
-    setStatus('❌ Error: ' + lastErr);
-    return;
-  }
+  if (!answer) { setStatus('❌ ' + lastErr); return; }
 
   currentAnswer = answer;
   document.getElementById('answerText').textContent  = currentAnswer;
   document.getElementById('answerBox').style.display = 'block';
-  document.getElementById('speakRow').classList.add('visible');
+  document.getElementById('speakRow').classList.add('show');
   setStatus('✅ Ready — read the answer below');
 
-  // Auto-speak if toggle is ON
-  if (document.getElementById('autoSpeak').checked) {
-    speakAnswer();
-  }
+  if (document.getElementById('autoSpeak').checked) speakAnswer();
 
-  // Save to history
   historyItems.unshift({ q: question, a: currentAnswer });
   if (historyItems.length > 6) historyItems.pop();
   renderHistory();
 }
 
-// ══ Text-to-Speech ══
+// ══ TTS ══
 function speakAnswer() {
   if (!currentAnswer) return;
   window.speechSynthesis.cancel();
-
-  const utter  = new SpeechSynthesisUtterance(currentAnswer);
-  utter.lang   = 'en-US';
-  utter.rate   = 0.88;
-  utter.pitch  = 1.0;
-
+  const utter = new SpeechSynthesisUtterance(currentAnswer);
+  utter.lang = 'en-US'; utter.rate = 0.88; utter.pitch = 1.0;
   const voices = window.speechSynthesis.getVoices();
-  const eng = voices.find(v =>
-    v.lang.startsWith('en') && (v.name.includes('Google') || v.name.includes('Natural'))
-  ) || voices.find(v => v.lang === 'en-US')
-    || voices.find(v => v.lang.startsWith('en'));
+  const eng = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Google') || v.name.includes('Natural')))
+           || voices.find(v => v.lang === 'en-US')
+           || voices.find(v => v.lang.startsWith('en'));
   if (eng) utter.voice = eng;
-
   document.getElementById('speakBtn').textContent = '🔊 Speaking…';
   utter.onend = () => { document.getElementById('speakBtn').textContent = '🔊 Read aloud'; };
   window.speechSynthesis.speak(utter);
@@ -819,15 +500,13 @@ function stopSpeaking() {
 // ══ History ══
 function renderHistory() {
   const el = document.getElementById('history');
-  if (historyItems.length === 0) { el.innerHTML = ''; return; }
-
-  let html = '<h3>Recent Q&amp;As</h3>';
+  if (!historyItems.length) { el.innerHTML = ''; return; }
+  let html = '<h3>Recent Q&As</h3>';
   historyItems.forEach((item, i) => {
-    html += `
-      <div class="history-item" onclick="showHistory(${i})">
-        <div class="hq">❓ ${escHtml(item.q)}</div>
-        <div class="ha">${escHtml(item.a)}</div>
-      </div>`;
+    html += `<div class="history-item" onclick="showHistory(${i})">
+      <div class="hq">❓ ${esc(item.q)}</div>
+      <div class="ha">${esc(item.a)}</div>
+    </div>`;
   });
   html += `<button class="clear-btn" onclick="clearHistory()">Clear history</button>`;
   el.innerHTML = html;
@@ -839,21 +518,14 @@ function showHistory(i) {
   document.getElementById('questionBox').style.display = 'block';
   document.getElementById('answerText').textContent    = item.a;
   document.getElementById('answerBox').style.display   = 'block';
-  document.getElementById('speakRow').classList.add('visible');
+  document.getElementById('speakRow').classList.add('show');
   currentAnswer = item.a;
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function clearHistory() {
-  historyItems.length = 0;
-  renderHistory();
-}
-
-// ══ Helpers ══
+function clearHistory() { historyItems.length = 0; renderHistory(); }
 function setStatus(html) { document.getElementById('status').innerHTML = html; }
-function escHtml(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
+function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 </script>
 </body>
 </html>
