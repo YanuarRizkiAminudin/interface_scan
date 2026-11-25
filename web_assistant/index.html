@@ -416,6 +416,16 @@
 
   <div class="card">
     <h2>👤 Your Background</h2>
+
+    <!-- Upload .txt file -->
+    <div id="uploadZone" onclick="document.getElementById('fileInput').click()"
+      style="border:2px dashed #E8EAED;border-radius:10px;padding:16px;text-align:center;cursor:pointer;margin-bottom:16px;transition:border-color 0.2s;">
+      <div style="font-size:24px;margin-bottom:4px;">📄</div>
+      <div style="font-size:14px;font-weight:600;color:#1A73E8;">Upload my_background.txt</div>
+      <div style="font-size:12px;color:#9AA0A6;margin-top:2px;">Tap to select file — fields fill automatically</div>
+    </div>
+    <input type="file" id="fileInput" accept=".txt,.md" style="display:none" onchange="loadFile(event)">
+
     <label>Full Name</label>
     <input type="text" id="bgName" placeholder="e.g. Yanuar Rizki Aminudin">
     <label>University &amp; Country</label>
@@ -488,6 +498,57 @@
 </div>
 
 <script>
+// ══ Load .txt file into fields ══
+function loadFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const text = e.target.result;
+
+    // Parse key: value lines
+    const get = (key) => {
+      const regex = new RegExp(`^${key}\\s*:\\s*(.+)`, 'im');
+      const match = text.match(regex);
+      return match ? match[1].trim() : '';
+    };
+
+    // Fill individual fields
+    const name = get('FULL NAME');
+    if (name) document.getElementById('bgName').value = name;
+
+    const uni = get('UNIVERSITY');
+    if (uni) document.getElementById('bgUniversity').value = uni;
+
+    const major = get('MAJOR');
+    if (major) document.getElementById('bgMajor').value = major;
+
+    const why = get('EXCHANGE PROGRAM');
+    if (why) document.getElementById('bgWhy').value = why;
+
+    const project = get('CURRENT PROJECT');
+    if (project) document.getElementById('bgProject').value = project;
+
+    const supervisor = get('SUPERVISOR');
+    if (supervisor) document.getElementById('bgSupervisor').value = supervisor;
+
+    const hobbies = get('HOBBIES');
+    if (hobbies) document.getElementById('bgHobbies').value = hobbies;
+
+    // Put full text into Extra for complete context
+    document.getElementById('bgExtra').value = text;
+
+    // Visual feedback
+    const zone = document.getElementById('uploadZone');
+    zone.style.borderColor = '#34A853';
+    zone.innerHTML = `<div style="font-size:24px;margin-bottom:4px;">✅</div>
+      <div style="font-size:14px;font-weight:600;color:#34A853;">${file.name} loaded!</div>
+      <div style="font-size:12px;color:#9AA0A6;margin-top:2px;">All fields filled from file</div>`;
+  };
+  reader.readAsText(file);
+}
+
 // ══ State ══
 let apiKey       = '';
 let background   = '';
