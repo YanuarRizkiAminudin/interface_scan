@@ -220,16 +220,12 @@
   <!-- Upload background file -->
   <div class="card">
     <h2>📄 Background Data</h2>
-    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
-      <div class="uz-icon">📄</div>
-      <div class="uz-title" id="uzTitle">Upload my_background.txt</div>
-      <div class="uz-sub" id="uzSub">Tap to select your background file</div>
+    <div class="upload-zone done" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+      <div class="uz-icon">✅</div>
+      <div class="uz-title" id="uzTitle">Background data loaded</div>
+      <div class="uz-sub" id="uzSub">Tap to replace with your own file</div>
     </div>
     <input type="file" id="fileInput" accept=".txt,.md" style="display:none" onchange="loadFile(event)">
-    <p style="font-size:12px;color:#9AA0A6;text-align:center;margin-top:10px;">
-      Don't have the file? Download template:
-      <a href="my_background.txt" download style="color:#1A73E8;">my_background.txt</a>
-    </p>
   </div>
 
   <button class="btn-primary" id="startBtn" onclick="startAssistant()">Start Assistant →</button>
@@ -279,9 +275,25 @@
 </div>
 
 <script>
-let apiKey = '', background = '', userName = '';
-let recognition = null, isRecording = false, currentAnswer = '';
+let apiKey = '', currentAnswer = '';
+let recognition = null, isRecording = false;
 const historyItems = [];
+
+// ══ DEFAULT BACKGROUND (pre-loaded) ══
+const DEFAULT_NAME = 'Yanuar Rizki Aminudin';
+let userName = DEFAULT_NAME;
+let background = `FULL NAME       : Yanuar Rizki Aminudin
+UNIVERSITY      : State Polytechnic of Malang (Polinema), Indonesia
+MAJOR           : D4 Information Technology (Teknik Informatika)
+EXCHANGE PROGRAM: Exchange student at National Formosa University (NFU), Yunlin, Taiwan. Duration: September 2026 – February 2027
+CURRENT PROJECT : InterfaceScan — an AI-assisted Android application for evaluating UI/UX quality based on Nielsen's 10 Usability Heuristics. Built with Flutter and Dart, integrated with Firebase for authentication and cloud storage, and uses Google Gemini AI to automatically analyze screenshots and generate heuristic-based usability findings. Also uses ML Kit OCR to extract text from UI screenshots.
+RESEARCH TOPIC  : AI-Assisted User Interface Evaluation using Nielsen's 10 Usability Heuristics
+SKILLS          : Flutter, Dart, Firebase, Android development, UI/UX design, REST APIs, Google Gemini AI, ML Kit, Git, GitHub
+HOBBIES         : Mobile app development, UI/UX design, exploring new technologies, photography, and traveling
+WHY TAIWAN      : I joined this exchange program to broaden my academic perspective, experience a different educational system, improve my English communication, and build connections with international students and professors. Taiwan is known for its strong technology and research environment, which aligns perfectly with my interest in software development.
+GOALS HERE      : To learn from experienced professors at NFU, deepen my knowledge in software engineering and AI, improve my research skills, and bring valuable knowledge back to Indonesia.
+ABOUT MALANG    : Malang is a city in East Java, Indonesia, known as the City of Education because it has many universities. It has cool weather due to high altitude, and is famous for its apples, beautiful nature, and friendly people.
+PERSONAL        : I am passionate about making technology more accessible and user-friendly. I believe good UI/UX design significantly improves how people interact with technology. I am always eager to learn and collaborate with others, and enjoy meeting people from different cultures.`;
 
 // ══ Load file ══
 function loadFile(event) {
@@ -313,8 +325,7 @@ function loadFile(event) {
 // ══ Start ══
 function startAssistant() {
   apiKey = document.getElementById('apiKey').value.trim();
-  if (!apiKey)     { alert('Please enter your Gemini API key.'); return; }
-  if (!background) { alert('Please upload your background .txt file first.'); return; }
+  if (!apiKey) { alert('Please enter your Gemini API key.'); return; }
 
   localStorage.setItem('pa_apiKey', apiKey);
   document.getElementById('displayName').textContent = `Hi, ${userName.split(' ')[0]} 👋`;
@@ -330,19 +341,17 @@ function goBack() {
 
 // ══ Restore from localStorage ══
 window.addEventListener('load', () => {
-  const savedKey = localStorage.getItem('pa_apiKey')     || '';
-  const savedBg  = localStorage.getItem('pa_background') || '';
-  const savedName= localStorage.getItem('pa_name')       || '';
-
+  const savedKey = localStorage.getItem('pa_apiKey') || '';
   if (savedKey) document.getElementById('apiKey').value = savedKey;
 
+  // If user previously uploaded a custom file, use that instead
+  const savedBg   = localStorage.getItem('pa_background') || '';
+  const savedName = localStorage.getItem('pa_name')       || '';
   if (savedBg) {
     background = savedBg;
-    userName   = savedName || 'You';
-    const zone = document.getElementById('uploadZone');
-    zone.classList.add('done');
-    document.getElementById('uzTitle').textContent = '✅ Background loaded from last session';
-    document.getElementById('uzSub').textContent   = 'Tap to upload a new file, or press Start';
+    userName   = savedName || DEFAULT_NAME;
+    document.getElementById('uzTitle').textContent = '✅ Custom file loaded';
+    document.getElementById('uzSub').textContent   = 'Tap to upload a different file';
   }
 
   if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window))

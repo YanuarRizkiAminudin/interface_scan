@@ -1,49 +1,72 @@
 ============================================================
   PRESENTATION ASSISTANT — MY BACKGROUND DATA
-  Fill in the blanks below, then paste the whole thing
-  into the "Anything else to mention" field on the web.
 ============================================================
 
 FULL NAME       : Yanuar Rizki Aminudin
 
 UNIVERSITY      : State Polytechnic of Malang (Polinema), Indonesia
 
-MAJOR           : Information Technology / D4 Teknik Informatika
+MAJOR           : D4 Information Technology (Teknik Informatika)
 
-EXCHANGE PROGRAM: Exchange student at National Formosa University (NFU), Taiwan
-                  Duration: [e.g. September 2026 – February 2027]
+EXCHANGE PROGRAM: Exchange student at National Formosa University (NFU), Yunlin, Taiwan
+                  Duration: September 2026 – February 2027
 
-SUPERVISOR      : [Name of your advisor/supervisor if any]
+SUPERVISOR      : My academic advisor at Polinema guided me to apply for this exchange program
 
-CURRENT PROJECT : InterfaceScan — an AI-assisted Android app for evaluating
+CURRENT PROJECT : InterfaceScan — an AI-assisted Android application for evaluating
                   UI/UX quality based on Nielsen's 10 Usability Heuristics.
-                  Built with Flutter, Firebase, and Google Gemini AI.
-                  The app captures screenshots, runs OCR and visual analysis,
-                  then generates heuristic-based findings automatically.
+                  Built with Flutter and Dart, integrated with Firebase for authentication
+                  and cloud storage, and uses Google Gemini AI to automatically analyze
+                  screenshots and generate heuristic-based usability findings.
+                  The app also uses ML Kit OCR to extract text from UI screenshots.
 
-RESEARCH TOPIC  : AI-Assisted User Interface Evaluation using Nielsen Heuristics
+RESEARCH TOPIC  : AI-Assisted User Interface Evaluation using Nielsen's 10 Usability Heuristics
 
-SKILLS          : Flutter, Firebase, Dart, Android development, UI/UX design,
-                  REST APIs, Machine Learning basics
+SKILLS          : Flutter, Dart, Firebase, Android development, UI/UX design,
+                  REST APIs, Google Gemini AI, ML Kit, Git, GitHub
 
-HOBBIES         : Mobile app development, UI/UX design, learning new tech
+HOBBIES         : Mobile app development, UI/UX design, exploring new technologies,
+                  photography, and traveling
 
-WHY TAIWAN      : I joined this exchange program to broaden my perspective,
-                  experience a different academic environment, improve my English,
-                  and collaborate with international students and professors.
+WHY TAIWAN      : I joined this exchange program to broaden my academic perspective,
+                  experience a different educational system, improve my English communication,
+                  and build connections with international students and professors.
+                  Taiwan is known for its strong technology and research environment,
+                  which aligns perfectly with my interest in software development.
 
-GOALS HERE      : Learn from professors and researchers at NFU, improve my
-                  research skills, and bring knowledge back to Indonesia.
+GOALS HERE      : To learn from experienced professors and researchers at NFU,
+                  deepen my knowledge in software engineering and AI,
+                  improve my research skills, and bring valuable knowledge back to Indonesia.
 
-PERSONAL        : I am passionate about making technology more accessible and
-                  user-friendly. I believe good UI/UX can significantly impact
-                  how people interact with technology.
+ABOUT MALANG    : Malang is a city in East Java, Indonesia. It is known as the "City of Education"
+                  because it has many universities. The weather is cool because it sits at high altitude.
+                  It is also famous for its apples, beautiful nature, and friendly people.
 
-EXTRA PROMPT INSTRUCTIONS:
-- Answer as if you are Yanuar speaking directly to the professor
-- Keep answers SHORT (2-4 sentences), natural, and confident
-- Use casual academic English — not too formal, not too casual
-- If asked about the project, explain it simply and enthusiastically
-- If asked about Indonesia or Malang, feel free to share briefly
+ABOUT POLINEMA  : State Polytechnic of Malang (Polinema) is one of the leading polytechnics
+                  in Indonesia, located in Malang, East Java. It focuses on applied technology
+                  and practical skills for industry.
 
+PERSONAL        : I am passionate about making technology more accessible and user-friendly.
+                  I believe good UI/UX design can significantly improve how people interact
+                  with technology. I am always eager to learn and collaborate with others.
+                  I am also open-minded and enjoy meeting people from different cultures.
+
+============================================================
+SAMPLE QUESTIONS A PROFESSOR MIGHT ASK:
+------------------------------------------------------------
+1. Can you introduce yourself?
+2. Where are you from?
+3. What do you study?
+4. What is your project about?
+5. Why did you choose Taiwan for your exchange?
+6. How long will you be here?
+7. What do you hope to learn here?
+8. What technology do you use in your project?
+9. What is Nielsen's 10 heuristics?
+10. Why is UI/UX evaluation important?
+11. What is Flutter?
+12. Have you published any research?
+13. What are your hobbies?
+14. Tell me about your city / Indonesia
+15. What are your future plans after graduation?
 ============================================================
