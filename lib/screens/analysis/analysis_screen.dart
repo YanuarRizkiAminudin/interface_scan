@@ -461,13 +461,18 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         resizeToAvoidBottomInset: true,
         appBar: AppBar(title: const Text(AppStrings.analyzeScreenshots)),
         body: ListView(
-          // Dismiss keyboard on scroll so the user can see thumbnails.
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-          // Extra bottom padding so content clears the FAB + keyboard.
           padding: const EdgeInsets.only(bottom: 160),
           children: [
-            // ── 1. Context (Discover phase) ───────────────────────────
-            const _SectionHeader(label: AppStrings.contextSection),
+            // ── Step indicator bar ────────────────────────────────────
+            _StepBar(
+              step1Done: count >= _minScreenshots && _appNameCtrl.text.trim().isNotEmpty,
+              step2Done: _step == _PipelineStep.done,
+              analyzing: _isAnalysing,
+            ),
+
+            // ── STEP 1: Context ───────────────────────────────────────
+            const _StepHeader(step: 1, label: 'App Info'),
             _ContextFields(
               nameCtrl: _nameCtrl,
               appNameCtrl: _appNameCtrl,
@@ -475,10 +480,11 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
               enabled: !_isAnalysing,
             ),
 
-            // ── 2. Screenshots ────────────────────────────────────────
-            _SectionHeader(
-              label:
-                  '${AppStrings.screenshotsSection} · $count/$_maxScreenshots',
+            // ── STEP 2: Screenshots ───────────────────────────────────
+            _StepHeader(
+              step: 2,
+              label: 'Screenshots',
+              trailing: '$count / $_maxScreenshots',
             ),
             _ScreenshotGrid(
               screenshots: _session.screenshots,
@@ -487,19 +493,18 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
               onRemove: _removeScreenshot,
               onRename: _renameScreenshot,
             ),
-
-            // Single, compact flow tip — no duplicate hint banners.
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
               child: Text(
                 AppStrings.screenshotCountHint,
-                style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
               ),
             ),
 
-            // ── 3. Analyze button / progress ──────────────────────────
+            // ── STEP 3: Analyze ───────────────────────────────────────
+            const _StepHeader(step: 3, label: 'Analyze'),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
               child: _isAnalysing
                   ? _ProgressPanel(
                       step: _step,
@@ -518,44 +523,33 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             // ── Error ─────────────────────────────────────────────────
             if (_errorMessage != null)
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: _ErrorBanner(message: _errorMessage!),
               ),
 
-            // ── Results: visual metrics ───────────────────────────────
+            // ── Results ───────────────────────────────────────────────
             if (_session.visualMetrics != null) ...[
               _SectionHeader(
                 label: count > 1
-                    ? '${AppStrings.visualMetrics} (${AppStrings.avgOf} $count ${AppStrings.screens})'
+                    ? '${AppStrings.visualMetrics} (avg of $count screens)'
                     : AppStrings.visualMetrics,
               ),
               _VisualMetricsPanel(metrics: _session.visualMetrics!),
             ],
-
-            // ── Results: per-screen accordion ─────────────────────────
             if (_session.allAnalyzed && count > 1) ...[
               const _SectionHeader(label: AppStrings.perScreenDetail),
-              ..._session.screenshots
-                  .map((s) => _ScreenshotDetailTile(screenshot: s)),
+              ..._session.screenshots.map((s) => _ScreenshotDetailTile(screenshot: s)),
             ],
-
-            // ── Results: OCR ──────────────────────────────────────────
             if (_session.ocrResult != null) ...[
               const _SectionHeader(label: AppStrings.ocrResults),
               _OcrPanel(result: _session.ocrResult!),
             ],
-
-            // ── Results: AI suggestions preview ───────────────────────
             if (_session.findings.isNotEmpty) ...[
               _SectionHeader(
-                label:
-                    '${AppStrings.aiSuggestions} (${_session.findings.length})',
+                label: '${AppStrings.aiSuggestions} (${_session.findings.length})',
               ),
               _FindingsPreviewPanel(findings: _session.findings),
             ],
-
-            // ── No API key warning ────────────────────────────────────
             if (widget.apiKey.isEmpty && _step == _PipelineStep.done)
               const Padding(
                 padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
@@ -582,6 +576,137 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
 // ─────────────────────────────────────────────────────────────────────────────
 // Sub-widgets
 // ─────────────────────────────────────────────────────────────────────────────
+
+// ── Step indicator bar ────────────────────────────────────────────────────────
+
+class _StepBar extends StatelessWidget {
+  final bool step1Done;
+  final bool step2Done;
+  final bool analyzing;
+
+  const _StepBar({
+    required this.step1Done,
+    required this.step2Done,
+    required this.analyzing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          _StepDot(number: 1, label: 'Info', done: step1Done, active: !step1Done),
+          _StepLine(done: step1Done),
+          _StepDot(number: 2, label: 'Screenshots', done: step1Done, active: step1Done && !step2Done),
+          _StepLine(done: step2Done),
+          _StepDot(number: 3, label: 'Analyze', done: step2Done, active: analyzing || (step1Done && !step2Done)),
+        ],
+      ),
+    );
+  }
+}
+
+class _StepDot extends StatelessWidget {
+  final int number;
+  final String label;
+  final bool done;
+  final bool active;
+
+  const _StepDot({required this.number, required this.label, required this.done, required this.active});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = done
+        ? AppTheme.secondary
+        : active
+            ? AppTheme.primary
+            : AppTheme.divider;
+    final textColor = (done || active) ? Colors.white : AppTheme.textSecondary;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 28, height: 28,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          child: Center(
+            child: done
+                ? const Icon(Icons.check, size: 16, color: Colors.white)
+                : Text('$number', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: textColor)),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500,
+            color: (done || active) ? AppTheme.textPrimary : AppTheme.textSecondary)),
+      ],
+    );
+  }
+}
+
+class _StepLine extends StatelessWidget {
+  final bool done;
+  const _StepLine({required this.done});
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        height: 2,
+        margin: const EdgeInsets.only(bottom: 20),
+        color: done ? AppTheme.secondary : AppTheme.divider,
+      ),
+    );
+  }
+}
+
+// ── Step header (numbered section label) ─────────────────────────────────────
+
+class _StepHeader extends StatelessWidget {
+  final int step;
+  final String label;
+  final String? trailing;
+
+  const _StepHeader({required this.step, required this.label, this.trailing});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 10),
+      child: Row(
+        children: [
+          Container(
+            width: 22, height: 22,
+            decoration: BoxDecoration(
+              color: AppTheme.primary,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Center(
+              child: Text('$step',
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white)),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(label,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+          if (trailing != null) ...[
+            const Spacer(),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryLight,
+                borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+              ),
+              child: Text(trailing!,
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.primary)),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
 
 // ── Section header ────────────────────────────────────────────────────────────
 

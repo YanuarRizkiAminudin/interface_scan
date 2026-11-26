@@ -474,40 +474,39 @@ class _SessionCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             child: Row(
               children: [
                 // ── Thumbnail ────────────────────────────────────────
                 ClipRRect(
-                  borderRadius:
-                      BorderRadius.circular(AppTheme.radiusSm),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                   child: SizedBox(
-                    width: 64,
-                    height: 64,
+                    width: 56,
+                    height: 72,
                     child: session.hasScreenshots
                         ? SafeFileImage(
                             path: session.screenshots.first.imagePath,
                             fit: BoxFit.cover,
-                            width: 64,
-                            height: 64,
+                            width: 56,
+                            height: 72,
                             fallback: const _ImagePlaceholder(),
                           )
                         : const _ImagePlaceholder(),
                   ),
                 ),
 
-                const SizedBox(width: 14),
+                const SizedBox(width: 12),
 
                 // ── Info ─────────────────────────────────────────────
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Name
+                      // Session name
                       Text(
                         session.name,
                         style: const TextStyle(
-                            fontSize: 15,
+                            fontSize: 14,
                             fontWeight: FontWeight.w700,
                             color: AppTheme.textPrimary,
                             height: 1.2),
@@ -517,71 +516,69 @@ class _SessionCard extends StatelessWidget {
 
                       // App name
                       if (session.appName.isNotEmpty) ...[
-                        const SizedBox(height: 2),
-                        Row(children: [
-                          const Icon(Icons.apps_rounded,
-                              size: 12, color: AppTheme.primary),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(session.appName,
-                                style: const TextStyle(
-                                    fontSize: 12,
-                                    color: AppTheme.primary,
-                                    fontWeight: FontWeight.w500),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis),
-                          ),
-                        ]),
-                      ],
-
-                      const SizedBox(height: 4),
-
-                      // Date
-                      Text(fmt.format(session.updatedAt),
+                        const SizedBox(height: 3),
+                        Text(
+                          session.appName,
                           style: const TextStyle(
-                              fontSize: 11,
-                              color: AppTheme.textSecondary)),
+                              fontSize: 13,
+                              color: AppTheme.primary,
+                              fontWeight: FontWeight.w500),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
 
                       const SizedBox(height: 6),
 
-                      // Chips
-                      Wrap(
-                        spacing: 5,
-                        runSpacing: 4,
+                      // Stats row — single line, no chips
+                      Row(
                         children: [
-                          _Chip(
-                            label: '$count screen${count == 1 ? '' : 's'}',
+                          _StatDot(
+                            icon: Icons.photo_library_outlined,
+                            label: '$count',
                             color: AppTheme.textSecondary,
                           ),
-                          if (total > 0)
-                            _Chip(
-                              label: '$total finding${total == 1 ? '' : 's'}',
+                          if (total > 0) ...[
+                            const SizedBox(width: 10),
+                            _StatDot(
+                              icon: Icons.flag_outlined,
+                              label: '$total',
                               color: AppTheme.primary,
                             ),
-                          if (accepted > 0)
-                            _Chip(
-                              label: '$accepted accepted',
+                          ],
+                          if (accepted > 0) ...[
+                            const SizedBox(width: 10),
+                            _StatDot(
+                              icon: Icons.check_circle_outline,
+                              label: '$accepted',
                               color: AppTheme.secondary,
                             ),
-                          if (pending > 0)
-                            _Chip(
-                              label: '$pending pending',
+                          ],
+                          if (pending > 0) ...[
+                            const SizedBox(width: 10),
+                            _StatDot(
+                              icon: Icons.hourglass_empty_rounded,
+                              label: '$pending',
                               color: AppTheme.warning,
                             ),
-                          if (session.hasRedesign)
-                            _Chip(
-                              label: 'Redesign',
-                              color: AppTheme.primary,
-                            ),
+                          ],
+                          const Spacer(),
+                          Text(
+                            fmt.format(session.updatedAt),
+                            style: const TextStyle(
+                                fontSize: 11,
+                                color: AppTheme.textSecondary),
+                          ),
                         ],
                       ),
                     ],
                   ),
                 ),
 
+                const SizedBox(width: 6),
                 // ── Chevron ──────────────────────────────────────────
                 const Icon(Icons.chevron_right_rounded,
-                    color: AppTheme.textSecondary, size: 20),
+                    color: AppTheme.textSecondary, size: 18),
               ],
             ),
           ),
@@ -606,25 +603,25 @@ class _ImagePlaceholder extends StatelessWidget {
   }
 }
 
-class _Chip extends StatelessWidget {
+class _StatDot extends StatelessWidget {
+  final IconData icon;
   final String label;
   final Color color;
-  const _Chip({required this.label, required this.color});
+  const _StatDot({required this.icon, required this.label, required this.color});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-        border: Border.all(color: color.withValues(alpha: 0.25)),
-      ),
-      child: Text(label,
-          style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: color)),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 13, color: color),
+        const SizedBox(width: 3),
+        Text(label,
+            style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: color)),
+      ],
     );
   }
 }

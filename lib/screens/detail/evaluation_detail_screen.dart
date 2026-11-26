@@ -127,13 +127,11 @@ class _EvaluationDetailScreenState extends State<EvaluationDetailScreen> {
       appBar: AppBar(
         title: const Text(AppStrings.evaluationDetail),
         actions: [
-          // Share evaluation summary
           IconButton(
             icon: const Icon(Icons.share_outlined),
             tooltip: 'Share',
             onPressed: _shareEvaluation,
           ),
-          // Continue / re-analyze
           IconButton(
             icon: const Icon(Icons.edit_outlined),
             tooltip: AppStrings.continueAnalysis,
@@ -147,25 +145,9 @@ class _EvaluationDetailScreenState extends State<EvaluationDetailScreen> {
           // ── Header ──────────────────────────────────────────────────
           _HeaderCard(session: _session, fmt: fmt),
 
-          // ── Quick actions ────────────────────────────────────────────
-          _ActionRow(
-            hasFindings:
-                _session.totalFindings > 0 || _session.allAnalyzed,
-            onReview: () => _openReview(context),
-            onCompare: () => _openComparison(context),
-            onAnalyze: () => _openAnalysis(context),
-          ),
-
           // ── Screenshots strip ────────────────────────────────────────
           const _SectionHeader(label: AppStrings.screenshotsLabel),
           _ScreenshotStrip(session: _session),
-
-          // ── Visual metrics ───────────────────────────────────────────
-          const _SectionHeader(label: AppStrings.metricsSummary),
-          if (_session.visualMetrics != null)
-            _MetricsCard(session: _session)
-          else
-            const _NotAnalyzedBanner(),
 
           // ── Findings summary counts ──────────────────────────────────
           _SectionHeader(
@@ -178,6 +160,13 @@ class _EvaluationDetailScreenState extends State<EvaluationDetailScreen> {
             rejectedCount: rejectedCount,
             totalFindings: _session.totalFindings,
           ),
+
+          // ── Visual metrics ───────────────────────────────────────────
+          const _SectionHeader(label: AppStrings.metricsSummary),
+          if (_session.visualMetrics != null)
+            _MetricsCard(session: _session)
+          else
+            const _NotAnalyzedBanner(),
 
           // ── Accepted findings ────────────────────────────────────────
           if (acceptedList.isNotEmpty) ...[
@@ -206,6 +195,61 @@ class _EvaluationDetailScreenState extends State<EvaluationDetailScreen> {
             ...pendingList.map((f) => _FindingTile(finding: f)),
           ],
         ],
+      ),
+
+      // ── Fixed bottom action bar ──────────────────────────────────────
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border(top: BorderSide(color: AppTheme.divider)),
+          ),
+          child: Row(
+            children: [
+              // Continue Analysis
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => _openAnalysis(context),
+                  icon: const Icon(Icons.play_arrow_rounded, size: 18),
+                  label: const Text('Analyze'),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(0, 44),
+                    foregroundColor: AppTheme.textSecondary,
+                    side: const BorderSide(color: AppTheme.divider),
+                  ),
+                ),
+              ),
+              if (_session.totalFindings > 0 || _session.allAnalyzed) ...[
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _openComparison(context),
+                    icon: const Icon(Icons.compare_arrows_rounded, size: 18),
+                    label: const Text('Compare'),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(0, 44),
+                      foregroundColor: AppTheme.secondary,
+                      side: const BorderSide(color: AppTheme.secondary),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  flex: 2,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _openReview(context),
+                    icon: const Icon(Icons.rate_review_outlined, size: 18),
+                    label: const Text('Review'),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(0, 44),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -292,79 +336,6 @@ class _HeaderCard extends StatelessWidget {
             ]),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _ActionRow extends StatelessWidget {
-  final bool hasFindings;
-  final VoidCallback onReview;
-  final VoidCallback onCompare;
-  final VoidCallback onAnalyze;
-
-  const _ActionRow({
-    required this.hasFindings,
-    required this.onReview,
-    required this.onCompare,
-    required this.onAnalyze,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: [
-          if (hasFindings) ...[
-            _ActionButton(
-              icon: Icons.rate_review_outlined,
-              label: AppStrings.reviewFindings,
-              color: AppTheme.primary,
-              onTap: onReview,
-            ),
-            _ActionButton(
-              icon: Icons.compare_arrows_outlined,
-              label: AppStrings.comparison,
-              color: AppTheme.secondary,
-              onTap: onCompare,
-            ),
-          ],
-          _ActionButton(
-            icon: Icons.play_arrow_rounded,
-            label: AppStrings.continueAnalysis,
-            color: AppTheme.textSecondary,
-            onTap: onAnalyze,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ActionButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-  const _ActionButton(
-      {required this.icon,
-      required this.label,
-      required this.color,
-      required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return OutlinedButton.icon(
-      onPressed: onTap,
-      icon: Icon(icon, size: 16),
-      label: Text(label),
-      style: OutlinedButton.styleFrom(
-        foregroundColor: color,
-        side: BorderSide(color: color.withValues(alpha: 0.5)),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       ),
     );
   }
